@@ -33,7 +33,7 @@ public class JSON
         var doc = new XmlDocument();
         doc.LoadXml(input.XML);
         var jsonString = JsonConvert.SerializeXmlNode(doc);
-        return new Result (true, JToken.Parse(jsonString));
+        return new Result(true, JToken.Parse(jsonString));
     }
 
     private static void OnPluginUnloadingRequested(AssemblyLoadContext obj)
