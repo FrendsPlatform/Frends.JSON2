@@ -28,7 +28,7 @@ public class JSON
     /// <returns>Object { bool Success, object Jtoken }</returns>
     public static Result ConvertJSONStringToJToken([PropertyTab] Input input)
     {
-       return new Result (true, JToken.Parse(input.Json));
+        return new Result(true, JToken.Parse(input.Json));
     }
 
     private static void OnPluginUnloadingRequested(AssemblyLoadContext obj)
