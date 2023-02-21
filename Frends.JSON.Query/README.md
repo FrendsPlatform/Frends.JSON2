@@ -21,6 +21,6 @@ Run tests
 `dotnet test`
 
 
-Query a NuGet package
+Create a NuGet package
 
 `dotnet pack --configuration Release`
