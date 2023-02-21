@@ -23,6 +23,6 @@ Run tests
 `dotnet test`
 
 
-Handlebars a NuGet package
+Create a NuGet package
 
 `dotnet pack --configuration Release`
