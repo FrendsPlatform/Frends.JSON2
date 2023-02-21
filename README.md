@@ -5,7 +5,8 @@ Frends Task to process JSON.
 # Tasks
 
 - [Frends.JSON.ConvertXMLStringToJToken](Frends.JSON.ConvertXMLStringToJToken/README.md)
-- [Frends.JSON.ConvertJSONStringToJToken](Frends.JSON.ConvertJSONStringToJToken/README.md)
+- [Frends.JSON.ConvertJSONStringToJToken](Frends.JSON.ConvertJSONStringToJToken/README.md
+- [Frends.JSON.QuerySingle](Frends.JSON.QuerySingle/README.md
 
 # Contributing
 When contributing to this repository, please first discuss the change you wish to make via issue, email, or any other method with the owners of this repository before making a change.
