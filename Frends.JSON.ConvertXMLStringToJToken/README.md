@@ -21,6 +21,6 @@ Run tests
 `dotnet test`
 
 
-ConvertXMLStringToJToken a NuGet package
+Create a NuGet package
 
 `dotnet pack --configuration Release`
