@@ -19,6 +19,7 @@ public class Input
     /// The query is of type JSONPath. 
     /// More details: http://goessner.net/articles/JsonPath/
     /// </summary>
+    /// <example>"\"$.key\"</example>
     [DefaultValue("\"$.key\"")]
     public string Query { get; set; }
 }
