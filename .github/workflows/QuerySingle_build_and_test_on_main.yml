@@ -1,0 +1,17 @@
+name: QuerySingle build main
+
+on:
+  push:
+    branches:    
+      - main
+    paths:
+      - 'Frends.JSON.QuerySingle/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_main.yml@main
+    with:
+      workdir: Frends.JSON.QuerySingle
+    secrets:
+      badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
