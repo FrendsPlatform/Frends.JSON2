@@ -32,24 +32,3 @@ public class Input
     /// <example>[ strongName, &lt;strong&gt;{{name}}&lt;/strong&gt; ]</example>
     public HandlebarPartial[] HandlebarPartials { get; set; }
 }
-
-/// <summary>
-/// HandlebarPartial values.
-/// </summary>
-public class HandlebarPartial
-{
-    /// <summary>
-    /// Template name that exists in the HandlebarTemplate.
-    /// </summary>
-    /// <example>strongName</example>
-    [DefaultValue("\"strongName\"")]
-    public string TemplateName { get; set; }
-
-    /// <summary>
-    /// Partial template. This needs to be in expression mode. Using {{ }} in other modes breaks the task.
-    /// </summary>
-    /// <example>&lt;strong&gt;{{name}}&lt;/strong&gt;</example>
-    [DefaultValue("\"<strong>{{name}}</strong>\"")]
-    [DisplayFormat(DataFormatString = "Expression")]
-    public string Template { get; set; }
-}
