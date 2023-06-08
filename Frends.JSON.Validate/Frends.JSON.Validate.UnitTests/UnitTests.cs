@@ -1,7 +1,6 @@
 using Frends.JSON.Validate.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Xunit;
 
 namespace Frends.JSON.Validate.UnitTests;
 
@@ -21,27 +20,26 @@ public class UnitTests
               }
             }";
 
-    [Fact]
+    [TestMethod]
     public void JsonShouldValidate()
     {
-        var result = JSON.Validate(new Input() { Json = ValidUserJson, JsonSchema = ValidUserSchema }, new Options(), default);
+        var result = JSON.Validate(new Input() { Json = ValidUserJson, JsonSchema = ValidUserSchema }, new Options() );
         Assert.IsTrue(result.IsValid);
         Assert.AreEqual(0, result.Errors.Count);
     }
 
-    [Fact]
+    [TestMethod]
     public void ShouldHaveLicenseSetForExecutingMoreThan1000Validations()
     {
         var results = Enumerable.Range(0, 2000).Select(i => JSON.Validate(
             new Input { Json = ValidUserJson, JsonSchema = ValidUserSchema },
-            new Options(),
-            default)).ToList();
+            new Options())).ToList();
 
         foreach (var result in results)
             Assert.IsTrue(result.IsValid);
     }
 
-    [Fact]
+    [TestMethod]
     public void JsonShouldNotValidate()
     {
         const string user = @"{
@@ -56,14 +54,14 @@ public class UnitTests
                 'roles': {'type': 'object'}
               }
             }";
-        var result = JSON.Validate(new Input() { Json = user, JsonSchema = schema }, new Options(), default);
+        var result = JSON.Validate(new Input() { Json = user, JsonSchema = schema }, new Options() );
         Assert.IsFalse(result.IsValid);
         Assert.IsFalse(result.Success);
         Assert.AreEqual(1, result.Errors.Count);
         Assert.AreEqual("Invalid type. Expected Object but got Array. Path 'roles', line 3, position 24.", result.Errors[0]);
     }
 
-    [Fact]
+    [TestMethod]
     public void InvalidJsonShouldNotValidate()
     {
         const string user = @"{
@@ -78,13 +76,13 @@ public class UnitTests
                 'roles': {'type': 'object'}
               }
             }";
-        var result = JSON.Validate(new Input() { Json = user, JsonSchema = schema }, new Options(), default);
+        var result = JSON.Validate(new Input() { Json = user, JsonSchema = schema }, new Options() );
         Assert.IsFalse(result.IsValid);
         Assert.AreEqual(1, result.Errors.Count);
         Assert.AreEqual("Unexpected character encountered while parsing value: A. Path 'name', line 2, position 20.", result.Errors[0]);
     }
 
-    [Fact]
+    [TestMethod]
     public void JsonValidationShouldThrow()
     {
         const string user = @"{
@@ -99,12 +97,12 @@ public class UnitTests
                 'roles': {'type': 'object'}
               }
             }";
-        var ex = Assert.ThrowsException<JsonException>(() => JSON.Validate(new Input() { Json = user, JsonSchema = schema }, new Options() { ThrowOnInvalidJson = true }, default));
+        var ex = Assert.ThrowsException<JsonException>(() => JSON.Validate(new Input() { Json = user, JsonSchema = schema }, new Options() { ThrowOnInvalidJson = true } ));
         Assert.IsTrue(ex.Message.Contains("Json is not valid. Invalid type. Expected Object but got Array. Path 'roles', line 3, position 24."));
 
     }
 
-    [Fact]
+    [TestMethod]
     public void InvalidJsonShouldThrow()
     {
         const string user = @"{
@@ -119,7 +117,7 @@ public class UnitTests
                 'roles': {'type': 'object'}
               }
             }";
-        var ex = Assert.ThrowsException<JsonReaderException>(() => JSON.Validate(new Input() { Json = user, JsonSchema = schema }, new Options() { ThrowOnInvalidJson = true }, default));
+        var ex = Assert.ThrowsException<JsonReaderException>(() => JSON.Validate(new Input() { Json = user, JsonSchema = schema }, new Options() { ThrowOnInvalidJson = true } ));
         Assert.IsTrue(ex.Message.Contains("Unexpected character encountered while parsing value: A. Path 'name', line 2, position 20."));
     }
 }
