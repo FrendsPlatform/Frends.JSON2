@@ -22,7 +22,7 @@ public class Result
     /// <summary>
     /// List of errors.
     /// </summary>
-    /// <example>{ An error occured... }</example>
+    /// <example>{ An error occured..., Another error }</example>
     public IList<string> Errors { get; set; }
 
     internal Result(bool success, bool isValid, IList<string> errors)
