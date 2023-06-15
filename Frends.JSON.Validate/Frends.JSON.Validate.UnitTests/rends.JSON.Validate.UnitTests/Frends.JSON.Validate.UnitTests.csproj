@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Frends.JSON.Validate\Frends.JSON.Validate\Frends.JSON.Validate.csproj" />
+    <ProjectReference Include="..\..\Frends.JSON.Validate\Frends.JSON.Validate.csproj" />
   </ItemGroup>
 
 </Project>

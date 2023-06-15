@@ -1,4 +1,5 @@
 ﻿using Frends.JSON.Validate.Definitions;
+using Frends.Newtonsoft.SchemaActivation;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
@@ -23,10 +24,9 @@ public class JSON
     /// <returns>Object { bool Success, IEnumerable&lt;object&gt; Data }</returns>
     public static Result Validate([PropertyTab] Input input, [PropertyTab] Options options)
     {
+        SchemaActivation.Activate();
         IList<string> errors;
-
         var schema = JSchema.Parse(input.JsonSchema);
-
         JToken jToken;
 
         try

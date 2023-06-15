@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\.github\workflows\Validate_release.yml = ..\.github\workflows\Validate_release.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frends.JSON.Validate.UnitTests", "..\Frends.JSON.Validate.UnitTests\rends.JSON.Validate.UnitTests\Frends.JSON.Validate.UnitTests.csproj", "{F5C4AD84-880D-4A88-9C33-6EDD08294812}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frends.JSON.Validate.UnitTests", "Frends.JSON.Validate.UnitTests\rends.JSON.Validate.UnitTests\Frends.JSON.Validate.UnitTests.csproj", "{F5C4AD84-880D-4A88-9C33-6EDD08294812}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,5 +1,5 @@
 # Frends.JSON.Validate
-Frends Task to Validate JSON using https://www.newtonsoft.com/jsonschema.
+Frends Task to Validate JSON string and JToken using https://www.newtonsoft.com/jsonschema.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) 
 [![Build](https://github.com/FrendsPlatform/Frends.JSON/actions/workflows/Validate_build_and_test_on_main.yml/badge.svg)](https://github.com/FrendsPlatform/Frends.JSON/actions)
