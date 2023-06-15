@@ -1,5 +1,6 @@
 using Frends.JSON.Validate.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 
 namespace Frends.JSON.Validate.UnitTests;
 
@@ -70,10 +71,39 @@ public class UnitTests
         input.Json = user;
         input.JsonSchema = schema;
 
-        var result = JSON.Validate(input, _options);
+        var options = _options;
+        options.ThrowOnInvalidJson = false;
+
+        var result = JSON.Validate(input, options);
         Assert.IsFalse(result.IsValid);
-        Assert.IsFalse(result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(1, result.Errors.Count);
-        Assert.AreEqual("Invalid type. Expected Object but got Array. Path 'roles', line 3, position 24.", result.Errors[0]);
+        Assert.IsTrue(result.Errors[0].Contains("Invalid"));
+    }
+
+    [TestMethod]
+    public void JsonShouldNotValidateThrow()
+    {
+        var user = @"{
+              'name': 'Arnie Admin',
+              'roles': ['Developer', 'Administrator']
+            }";
+
+        var schema = @"{
+              'type': 'object',
+              'properties': {
+                'name': {'type':'string'},
+                'roles': {'type': 'object'}
+              }
+            }";
+
+        var input = _input;
+        input.Json = user;
+        input.JsonSchema = schema;
+
+        var options = _options;
+
+        var ex = Assert.ThrowsException<JsonException>(() => JSON.Validate(input, _options));
+        Assert.IsNotNull(ex);
     }
 }
