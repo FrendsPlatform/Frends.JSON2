@@ -52,14 +52,14 @@ public class UnitTests
     }
 
     [TestMethod]
-    public void JsonShouldNotValidate()
+    public void InvalidSchema()
     {
         var user = @"{
               'name': 'Arnie Admin',
               'roles': ['Developer', 'Administrator']
             }";
 
-        var schema = @"foo";
+        var schema = "foo";
 
         var input = _input;
         input.Json = user;
