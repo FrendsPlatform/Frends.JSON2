@@ -59,6 +59,30 @@ public class UnitTests
               'roles': ['Developer', 'Administrator']
             }";
 
+        var schema = @"foo";
+
+        var input = _input;
+        input.Json = user;
+        input.JsonSchema = schema;
+
+        var options = _options;
+        options.ThrowOnInvalidJson = false;
+
+        var result = JSON.Validate(input, options);
+        Assert.IsFalse(result.IsValid);
+        Assert.IsFalse(result.Success);
+        Assert.AreEqual(1, result.Errors.Count);
+        Assert.IsTrue(result.Errors[0].Contains("Unexpected end when reading JSON"));
+    }
+
+    [TestMethod]
+    public void JsonShouldNotValidateToResult()
+    {
+        var user = @"{
+              'name': 'Arnie Admin',
+              'roles': ['Developer', 'Administrator']
+            }";
+
         var schema = @"{
               'type': 'object',
               'properties': {

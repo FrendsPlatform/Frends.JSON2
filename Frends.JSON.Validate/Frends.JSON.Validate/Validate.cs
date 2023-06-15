@@ -25,12 +25,13 @@ public class JSON
     public static Result Validate([PropertyTab] Input input, [PropertyTab] Options options)
     {
         SchemaActivation.Activate();
+        JSchema schema;
         IList<string> errors;
-        var schema = JSchema.Parse(input.JsonSchema);
         JToken jToken;
 
         try
         {
+            schema = JSchema.Parse(input.JsonSchema);
             jToken = GetJTokenFromInput(input.Json);
         }
         catch (Exception exception)
