@@ -12,7 +12,7 @@
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	<Description>Frends Task to Validate JSON string and JToken.</Description>
 	<PackageProjectUrl>https://frends.com/</PackageProjectUrl>
-	<RepositoryUrl>https://github.com/FrendsPlatform/Frends.JSON</RepositoryUrl>
+	<RepositoryUrl>https://github.com/FrendsPlatform/Frends.JSON2</RepositoryUrl>
   </PropertyGroup>
 	
   <ItemGroup>

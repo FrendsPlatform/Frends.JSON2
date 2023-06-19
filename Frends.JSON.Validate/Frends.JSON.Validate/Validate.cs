@@ -21,7 +21,7 @@ public class JSON
     /// </summary>
     /// <param name="input">Input parameters</param>
     /// <param name="options">Optional parameter.</param>
-    /// <returns>Object { bool Success, IEnumerable&lt;object&gt; Data }</returns>
+    /// <returns>Object { bool Success, bool IsValid, IList&lt;string&gt; Errors }</returns>
     public static Result Validate([PropertyTab] Input input, [PropertyTab] Options options)
     {
         SchemaActivation.Activate();
