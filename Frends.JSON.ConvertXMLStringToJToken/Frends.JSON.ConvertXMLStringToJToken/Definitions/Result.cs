@@ -15,7 +15,7 @@ public class Result
     /// JToken.
     /// </summary>
     /// <example>{{ "?xml": { "@version": "1.0", "@standalone": "no" }, "root": { "foos": { "@id": "1", "foo": "bar" } }}}</example>
-    public object Jtoken { get; private set; }
+    public dynamic Jtoken { get; private set; }
 
     internal Result(bool success, object jtoken)
     {

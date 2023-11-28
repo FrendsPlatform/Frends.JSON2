@@ -2,7 +2,7 @@ using Frends.JSON.ConvertXMLStringToJToken.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 
-namespace Frends.JSON.ConvertXMLStringToJToken.UnitTests;
+namespace Frends.JSON.ConvertXMLStringToJToken.Tests;
 
 [TestClass]
 public class UnitTests
