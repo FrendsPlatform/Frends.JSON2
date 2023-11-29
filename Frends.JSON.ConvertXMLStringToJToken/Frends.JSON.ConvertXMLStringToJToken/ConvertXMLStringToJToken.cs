@@ -2,8 +2,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
-using System.Reflection;
-using System.Runtime.Loader;
 using System.Xml;
 
 namespace Frends.JSON.ConvertXMLStringToJToken;
@@ -13,15 +11,6 @@ namespace Frends.JSON.ConvertXMLStringToJToken;
 /// </summary>
 public class JSON
 {
-    /// Mem cleanup.
-    static JSON()
-    {
-        var currentAssembly = Assembly.GetExecutingAssembly();
-        var currentContext = AssemblyLoadContext.GetLoadContext(currentAssembly);
-        if (currentContext != null)
-            currentContext.Unloading += OnPluginUnloadingRequested;
-    }
-
     /// <summary>
     /// Convert XML string to JToken.
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.JSON.ConvertXMLStringToJToken)
@@ -34,10 +23,5 @@ public class JSON
         doc.LoadXml(input.XML);
         var jsonString = JsonConvert.SerializeXmlNode(doc);
         return new Result(true, JToken.Parse(jsonString));
-    }
-
-    private static void OnPluginUnloadingRequested(AssemblyLoadContext obj)
-    {
-        obj.Unloading -= OnPluginUnloadingRequested;
     }
 }
