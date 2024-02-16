@@ -15,7 +15,7 @@ public class Result
     /// JToken.
     /// </summary>
     /// <example>{{ "foo": "bar", "foobar": [ "Foo", "Bar" ]}}</example>
-    public object Jtoken { get; private set; }
+    public dynamic Jtoken { get; private set; }
 
     internal Result(bool success, object jtoken)
     {

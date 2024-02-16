@@ -16,6 +16,7 @@ public class UnitTests
         };
 
         var result = JSON.ConvertJSONStringToJToken(input);
+        Assert.AreEqual("bar", result.Jtoken.foo.ToString());
         Assert.IsTrue(result.Success);
         Assert.IsInstanceOfType(result.Jtoken, typeof(JObject));
     }
