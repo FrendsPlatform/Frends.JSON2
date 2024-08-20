@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.2] - 2024-08-20
+## [1.1.0] - 2024-08-20
 ### Updated
 - Updated Newtonsoft.Json library to the latest version 13.0.3.
 
