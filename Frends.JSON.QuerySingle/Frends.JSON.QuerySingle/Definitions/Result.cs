@@ -15,7 +15,7 @@ public class Result
     /// Result data.
     /// </summary>
     /// <example>{{ "Name": "Foo", "Products": [{ "Name": "Bar", "Price": 1 }]}}</example>
-    public object Data { get; private set; }
+    public dynamic Data { get; private set; }
 
     internal Result(bool success, object data)
     {
