@@ -27,7 +27,7 @@ public class JSON
     /// </summary>
     /// <param name="input">Input parameters.</param>
     /// <param name="options">Optional parameters.</param>
-    /// <returns>Object { bool Success, object Data }</returns>
+    /// <returns>Object { bool Success, dynamic Data }</returns>
     public static Result QuerySingle([PropertyTab] Input input, [PropertyTab] Options options)
     {
         JToken jToken = GetJTokenFromInput(input.Json);
