@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.0] - 2024-08-20
+### Updated
+- Updated Newtonsoft.Json library to the latest version 13.0.3.
+
 ## [1.0.1] - 2024-02-16
 ### Fixed
 - Fixed dotnotation on Task Jtoken result property by changing the type to dynamic.
