@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.0] - 2025-01-13
+### Added
+- Added ConvertAsArrayPaths parameter that specify which XML elements should be converted to arrays.
+
 ## [1.1.0] - 2024-08-20
 ### Updated
 - Updated Newtonsoft.Json library to the latest version 13.0.3.
