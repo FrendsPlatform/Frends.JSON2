@@ -12,7 +12,7 @@ public class Input
     public string XML { get; set; }
 
     /// <summary>
-    /// A list of XPath expressions that specify which XML elements should always be converted to arrays.
+    /// A list of JSONPath expressions that specify which JSON elements should always be converted to arrays.
     /// </summary>
     /// <example>
     /// new[] { "$.root.items.item" }
