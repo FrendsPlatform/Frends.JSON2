@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 	<TargetFrameworks>net6.0</TargetFrameworks>
-	<Version>1.1.0</Version>
+	<Version>1.2.0</Version>
 	<Authors>Frends</Authors>
 	<Copyright>Frends</Copyright>
 	<Company>Frends</Company>
@@ -22,12 +22,8 @@
   </ItemGroup>
 	
   <ItemGroup>
+    <PackageReference Include="Handlebars.Net" Version="2.1.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 	
-  <ItemGroup>
-    <Reference Include="Handlebars">
-      <HintPath>libs\Handlebars.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>
