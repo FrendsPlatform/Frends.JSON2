@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
+using System.Linq;
 using System.Xml;
 
 namespace Frends.JSON.ConvertXMLStringToJToken;
@@ -22,6 +23,25 @@ public class JSON
         var doc = new XmlDocument();
         doc.LoadXml(input.XML);
         var jsonString = JsonConvert.SerializeXmlNode(doc);
-        return new Result(true, JToken.Parse(jsonString));
+        var jToken = JToken.Parse(jsonString);
+
+        if (input.ConvertAsArrayPaths != null && input.ConvertAsArrayPaths.Length > 0)
+        {
+            foreach (var path in input.ConvertAsArrayPaths)
+            {
+                var matchingTokens = jToken.SelectTokens(path).ToList();
+
+                foreach (var token in matchingTokens)
+                {
+                    if (token.Type != JTokenType.Array)
+                    {
+                        var array = new JArray(token);
+                        token.Replace(array);
+                    }
+                }
+            }
+        }
+
+        return new Result(true, jToken);
     }
 }
