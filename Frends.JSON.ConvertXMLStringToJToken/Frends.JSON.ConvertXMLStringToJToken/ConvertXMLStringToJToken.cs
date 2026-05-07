@@ -45,6 +45,7 @@ public class JSON
         ValidateXmlWithSchema(xml, schemaSet);
 
         var xDocument = XDocument.Parse(xml);
+        // Populate schema info to map XML elements to JSON arrays based on schema occurrences.
         xDocument.Validate(schemaSet, null, true);
         AddJsonArrayAttributesFromSchema(xDocument);
 
@@ -69,7 +70,7 @@ public class JSON
         };
 
         settings.ValidationEventHandler += (_, args) =>
-            throw args.Exception ?? new XmlSchemaValidationException(args.Message);
+            throw new XmlSchemaValidationException($"XML schema validation failed: {args.Message}", args.Exception);
 
         using var xmlReader = XmlReader.Create(new StringReader(xml), settings);
         while (xmlReader.Read())
