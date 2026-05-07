@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -42,14 +43,27 @@ public class JSON
     private static XmlDocument LoadXmlDocumentWithSchemaHints(string xml, string xsd)
     {
         var schemaSet = CreateSchemaSet(xsd);
-        ValidateXmlWithSchema(xml, schemaSet);
 
         var xDocument = XDocument.Parse(xml);
-        // Populate schema info to map XML elements to JSON arrays based on schema occurrences.
-        xDocument.Validate(schemaSet, null, true);
+
+        xDocument.Validate(
+            schemaSet,
+            (sender, args) =>
+            {
+                throw new XmlSchemaValidationException(
+                    $"XML schema validation failed: {args.Message}",
+                    args.Exception);
+            },
+            true);
+
         AddJsonArrayAttributesFromSchema(xDocument);
 
-        return LoadXmlDocument(xDocument.ToString(SaveOptions.DisableFormatting));
+        var xmlDocument = new XmlDocument();
+
+        using var reader = xDocument.CreateReader();
+        xmlDocument.Load(reader);
+
+        return xmlDocument;
     }
 
     private static XmlSchemaSet CreateSchemaSet(string xsd)
@@ -61,27 +75,10 @@ public class JSON
         return schemaSet;
     }
 
-    private static void ValidateXmlWithSchema(string xml, XmlSchemaSet schemaSet)
-    {
-        var settings = new XmlReaderSettings
-        {
-            ValidationType = ValidationType.Schema,
-            Schemas = schemaSet
-        };
-
-        settings.ValidationEventHandler += (_, args) =>
-            throw new XmlSchemaValidationException($"XML schema validation failed: {args.Message}", args.Exception);
-
-        using var xmlReader = XmlReader.Create(new StringReader(xml), settings);
-        while (xmlReader.Read())
-        {
-            // Read whole document to trigger schema validation.
-        }
-    }
-
     private static void AddJsonArrayAttributesFromSchema(XDocument document)
     {
-        if (document.Root == null) return;
+        if (document.Root == null)
+            return;
 
         XNamespace jsonNs = JsonNamespace;
         var hasArray = false;
@@ -89,6 +86,7 @@ public class JSON
         foreach (var element in document.Root.DescendantsAndSelf())
         {
             var schemaElement = element.GetSchemaInfo()?.SchemaElement;
+
             if (schemaElement?.MaxOccurs > 1m)
             {
                 element.SetAttributeValue(jsonNs + "Array", "true");
@@ -96,7 +94,16 @@ public class JSON
             }
         }
 
-        if (hasArray && document.Root.GetPrefixOfNamespace(jsonNs) == null)
-            document.Root.SetAttributeValue(XNamespace.Xmlns + "json", JsonNamespace);
+        var existing = document.Root.Attributes()
+            .FirstOrDefault(a =>
+                a.IsNamespaceDeclaration &&
+                a.Value == JsonNamespace);
+
+        if (hasArray && existing == null)
+        {
+            document.Root.SetAttributeValue(
+                XNamespace.Xmlns + "json",
+                JsonNamespace);
+        }
     }
 }

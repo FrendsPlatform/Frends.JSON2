@@ -65,5 +65,12 @@ public class UnitTests
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(root);
         Assert.IsInstanceOfType(root["person"], typeof(JArray));
+
+        var persons = root["person"] as JArray;
+
+        Assert.IsNotNull(persons);
+
+        Assert.AreEqual(1, persons.Count);
+        Assert.AreEqual("Alan", persons[0]["name"]?.ToString());
     }
 }
