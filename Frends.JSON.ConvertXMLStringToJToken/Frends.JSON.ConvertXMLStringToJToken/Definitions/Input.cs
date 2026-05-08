@@ -12,8 +12,11 @@ public class Input
     public string XML { get; set; }
 
     /// <summary>
-    /// Optional XSD schema used for XML validation and JSON type mapping.
+    /// Optional XSD schema used for XML validation and for determining
+    /// whether XML elements should be serialized as JSON arrays.
     /// </summary>
-    /// <example>&lt;xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'&gt;...&lt;/xs:schema&gt;</example>
+    /// <example>
+    /// &lt;xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'&gt;...&lt;/xs:schema&gt;
+    /// </example>
     public string XSD { get; set; }
 }
