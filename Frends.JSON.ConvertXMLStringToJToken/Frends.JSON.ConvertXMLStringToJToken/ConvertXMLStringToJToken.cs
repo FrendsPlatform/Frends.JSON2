@@ -74,7 +74,7 @@ public class JSON
         var token = JToken.Parse(jsonString);
 
         if (options.TypeCorrection != TypeCorrectionMode.None)
-            CorrectTypes(token);
+            CorrectTypes(token, options.ActionOnBadValues);
 
         return new Result(true, token);
     }
@@ -206,24 +206,24 @@ public class JSON
     /// removing the consumed xsi:type attribute and collapsing the wrapper object when only the
     /// converted value remains.
     /// </summary>
-    private static void CorrectTypes(JToken token)
+    private static void CorrectTypes(JToken token, BadValueAction actionOnBadValues)
     {
         switch (token)
         {
             case JArray array:
                 foreach (var item in array.Children().ToList())
-                    CorrectTypes(item);
+                    CorrectTypes(item, actionOnBadValues);
                 break;
 
             case JObject obj:
                 foreach (var value in obj.PropertyValues().ToList())
-                    CorrectTypes(value);
-                ApplyTypeHint(obj);
+                    CorrectTypes(value, actionOnBadValues);
+                ApplyTypeHint(obj, actionOnBadValues);
                 break;
         }
     }
 
-    private static void ApplyTypeHint(JObject obj)
+    private static void ApplyTypeHint(JObject obj, BadValueAction actionOnBadValues)
     {
         var typeProperty = obj.Property(XsiTypePropertyName, StringComparison.Ordinal);
         if (typeProperty == null)
@@ -237,9 +237,15 @@ public class JSON
         if (textProperty == null || textProperty.Value.Type != JTokenType.String)
             return;
 
-        var converted = convert(textProperty.Value.ToString());
+        var rawValue = textProperty.Value.ToString();
+        var converted = convert(rawValue);
         if (converted == null)
+        {
+            if (actionOnBadValues == BadValueAction.Throw)
+                throw new FormatException(
+                    $"Value '{rawValue}' on <{obj.Path}> could not be converted to '{typeName}'.");
             return;
+        }
 
         typeProperty.Remove();
 

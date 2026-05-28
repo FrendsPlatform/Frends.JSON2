@@ -27,6 +27,23 @@ public enum TypeCorrectionMode
 }
 
 /// <summary>
+/// Controls what happens when a value carries a known numeric/boolean type hint but cannot
+/// be parsed as that type (e.g. xsi:type="int" with value "abc").
+/// </summary>
+public enum BadValueAction
+{
+    /// <summary>
+    /// Leave the unparseable value as a JSON string (default, backwards compatible).
+    /// </summary>
+    Ignore,
+
+    /// <summary>
+    /// Throw an exception identifying the element and value that failed to convert.
+    /// </summary>
+    Throw,
+}
+
+/// <summary>
 /// Optional parameters.
 /// </summary>
 public class Options
@@ -49,4 +66,15 @@ public class Options
     /// </example>
     [UIHint(nameof(TypeCorrection), "", TypeCorrectionMode.Schema)]
     public string XSD { get; set; }
+
+    /// <summary>
+    /// What to do when a value carries a recognized numeric/boolean type hint but cannot be
+    /// parsed as that type (e.g. xsi:type="int" with value "abc"). Ignore (default) keeps the
+    /// unparseable value as a JSON string. Throw raises an exception identifying the element
+    /// and value. Only used (and shown) when TypeCorrection is Attributes or Schema.
+    /// </summary>
+    /// <example>BadValueAction.Throw</example>
+    [DefaultValue(BadValueAction.Ignore)]
+    [UIHint(nameof(TypeCorrection), "", TypeCorrectionMode.Attributes, TypeCorrectionMode.Schema)]
+    public BadValueAction ActionOnBadValues { get; set; } = BadValueAction.Ignore;
 }
