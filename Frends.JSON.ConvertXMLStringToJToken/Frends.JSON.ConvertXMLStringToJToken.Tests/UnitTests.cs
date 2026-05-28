@@ -91,10 +91,12 @@ public class UnitTests
         };
 
         var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.None });
-        var price = ((JObject)result.Jtoken)["root"]?["price"];
+        Assert.IsTrue(result.Success);
+
+        var price = ((JObject)result.Jtoken)["root"]?["price"] as JObject;
 
         // Default behaviour is unchanged: the xsi:type wrapper and string value are preserved.
-        Assert.IsInstanceOfType(price, typeof(JObject));
+        Assert.IsNotNull(price);
         Assert.AreEqual(JTokenType.String, price["#text"].Type);
         Assert.AreEqual("12.5", price["#text"].ToString());
     }
@@ -149,6 +151,97 @@ public class UnitTests
     }
 
     [TestMethod]
+    public void AttributesMode_BooleanParsing_ShouldBeCaseSensitive()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <lower xsi:type='boolean'>true</lower>
+                      <upper xsi:type='boolean'>TRUE</upper>
+                      <camel xsi:type='boolean'>True</camel>
+                    </root>"
+        };
+
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var root = (JObject)((JObject)result.Jtoken)["root"];
+
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual(JTokenType.Boolean, root["lower"].Type);
+        Assert.IsTrue(root["lower"].Value<bool>());
+
+        Assert.AreEqual(JTokenType.Boolean, root["upper"].Type);
+        Assert.IsTrue(root["upper"].Value<bool>());
+
+        Assert.AreEqual(JTokenType.Boolean, root["camel"].Type);
+        Assert.IsTrue(root["camel"].Value<bool>());
+    }
+
+    [TestMethod]
+    public void AttributesMode_ShouldHonourAliasedXsiNamespacePrefix()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:i='http://www.w3.org/2001/XMLSchema-instance'>
+                      <price i:type='float'>12.5</price>
+                      <inStock i:type='boolean'>true</inStock>
+                    </root>"
+        };
+
+        // Author used 'i' instead of the conventional 'xsi' prefix; conversion must still fire
+        // because the prefix is resolved against the XML Schema Instance namespace URI.
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var root = (JObject)((JObject)result.Jtoken)["root"];
+
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual(JTokenType.Float, root["price"].Type);
+        Assert.AreEqual(12.5, root["price"].Value<double>());
+        Assert.AreEqual(JTokenType.Boolean, root["inStock"].Type);
+        Assert.IsTrue(root["inStock"].Value<bool>());
+    }
+
+    [TestMethod]
+    public void AttributesMode_ShouldIgnoreTypePropertyWhenPrefixNotBoundToXsiNamespace()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:cust='http://example.com/custom'>
+                      <price cust:type='float'>12.5</price>
+                    </root>"
+        };
+
+        // 'cust' is bound to an unrelated namespace, so cust:type is just an arbitrary attribute
+        // and must not trigger conversion.
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var price = ((JObject)result.Jtoken)["root"]?["price"];
+
+        Assert.IsInstanceOfType(price, typeof(JObject));
+        Assert.AreEqual("float", price["@cust:type"]?.ToString());
+        Assert.AreEqual(JTokenType.String, price["#text"].Type);
+        Assert.AreEqual("12.5", price["#text"].ToString());
+    }
+
+    [TestMethod]
+    public void AttributesMode_ShouldResolvePrefixDeclaredOnInnerElement()
+    {
+        var input = new Input()
+        {
+            XML = @"<root>
+                      <wrapper xmlns:i='http://www.w3.org/2001/XMLSchema-instance'>
+                        <price i:type='float'>12.5</price>
+                      </wrapper>
+                    </root>"
+        };
+
+        // The xsi-equivalent prefix is bound on <wrapper>, not on the root — the scope must
+        // still be visible to the inner <price> element when we resolve i:type.
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var price = ((JObject)result.Jtoken)["root"]?["wrapper"]?["price"];
+
+        Assert.AreEqual(JTokenType.Float, price.Type);
+        Assert.AreEqual(12.5, price.Value<double>());
+    }
+
+    [TestMethod]
     public void AttributesMode_ShouldLeaveUnparseableValuesAsStrings()
     {
         var input = new Input()
@@ -197,9 +290,11 @@ public class UnitTests
         };
 
         var result = JSON.ConvertXMLStringToJToken(input, options);
-        var root = (JObject)((JObject)result.Jtoken)["root"];
-
         Assert.IsTrue(result.Success);
+
+        var root = ((JObject)result.Jtoken)["root"] as JObject;
+        Assert.IsNotNull(root);
+
         Assert.AreEqual(JTokenType.Float, root["price"].Type);
         Assert.AreEqual(12.5, root["price"].Value<double>());
         Assert.AreEqual(JTokenType.Integer, root["quantity"].Type);
@@ -361,6 +456,107 @@ public class UnitTests
     }
 
     [TestMethod]
+    public void SchemaMode_ShouldHonourAliasedXsiNamespacePrefix()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:i='http://www.w3.org/2001/XMLSchema-instance'>
+                      <price>12.5</price>
+                    </root>"
+        };
+
+        var options = new Options()
+        {
+            TypeCorrection = TypeCorrectionMode.Schema,
+            XSD = @"<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                      <xs:element name='root'>
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name='price' type='xs:float' />
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:schema>"
+        };
+
+        // Root already binds the XSD-instance namespace under prefix 'i'. The schema-injected
+        // type attribute should serialize as @i:type and the prefix-agnostic lookup must still
+        // resolve it for conversion.
+        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var price = ((JObject)result.Jtoken)["root"]?["price"];
+
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual(JTokenType.Float, price.Type);
+        Assert.AreEqual(12.5, price.Value<double>());
+    }
+
+    [TestMethod]
+    public void SchemaMode_ShouldOverrideInlineXsiTypeWithSchemaType()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <price xsi:type='int'>12.5</price>
+                    </root>"
+        };
+
+        var options = new Options()
+        {
+            TypeCorrection = TypeCorrectionMode.Schema,
+            XSD = @"<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                      <xs:element name='root'>
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name='price' type='xs:float' />
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:schema>"
+        };
+
+        // The author lied with xsi:type='int' on a 12.5 value; schema says float. XSD wins.
+        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var price = ((JObject)result.Jtoken)["root"]?["price"];
+
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual(JTokenType.Float, price.Type);
+        Assert.AreEqual(12.5, price.Value<double>());
+    }
+
+    [TestMethod]
+    public void SchemaMode_ShouldStripInlineXsiTypeWhenSchemaTypeIsString()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <name xsi:type='int'>42</name>
+                    </root>"
+        };
+
+        var options = new Options()
+        {
+            TypeCorrection = TypeCorrectionMode.Schema,
+            XSD = @"<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                      <xs:element name='root'>
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name='name' type='xs:string' />
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:schema>"
+        };
+
+        // Inline xsi:type='int' must not override the schema's xs:string declaration.
+        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var name = ((JObject)result.Jtoken)["root"]?["name"];
+
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual(JTokenType.String, name.Type);
+        Assert.AreEqual("42", name.ToString());
+    }
+
+    [TestMethod]
     public void SchemaMode_WithoutXsd_ShouldNoOpAndKeepStrings()
     {
         var input = new Input()
@@ -371,10 +567,34 @@ public class UnitTests
         // Schema mode without an XSD is a graceful no-op (not an error), so migrated
         // processes that land in Schema mode without a schema keep their previous output.
         var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Schema });
+        Assert.IsTrue(result.Success);
+
+        var price = ((JObject)result.Jtoken)["root"]?["price"];
+        Assert.IsNotNull(price);
+        Assert.AreEqual(JTokenType.String, price.Type);
+        Assert.AreEqual("12.5", price.ToString());
+    }
+
+    [TestMethod]
+    public void SchemaMode_WithoutXsd_ShouldNotConvertInlineXsiTypes()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <price xsi:type='float'>12.5</price>
+                    </root>"
+        };
+
+        // Schema-without-XSD is a true no-op: inline xsi:type must not bleed through and
+        // start converting values either. Tenants who land here via migration with no XSD
+        // should see exactly the pre-2.0.0 output shape.
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Schema });
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         Assert.IsTrue(result.Success);
-        Assert.AreEqual(JTokenType.String, price.Type);
-        Assert.AreEqual("12.5", price.ToString());
+        Assert.IsInstanceOfType(price, typeof(JObject));
+        Assert.AreEqual("float", price["@xsi:type"]?.ToString());
+        Assert.AreEqual(JTokenType.String, price["#text"].Type);
+        Assert.AreEqual("12.5", price["#text"].ToString());
     }
 }

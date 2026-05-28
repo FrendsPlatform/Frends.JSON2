@@ -23,7 +23,10 @@ public class JSON
     private const string XsiNamespace = "http://www.w3.org/2001/XMLSchema-instance";
 
     private const string TextPropertyName = "#text";
-    private const string XsiTypePropertyName = "@xsi:type";
+    private const string XmlnsPrefixSeparator = "@xmlns:";
+
+    private static readonly IReadOnlyDictionary<string, string> EmptyXmlnsScope =
+        new Dictionary<string, string>(0, StringComparer.Ordinal);
 
     /// <summary>
     /// Maps an XSD type local name to a parser producing a native JSON value, or null when unparseable.
@@ -73,7 +76,10 @@ public class JSON
         var jsonString = JsonConvert.SerializeXmlNode(doc);
         var token = JToken.Parse(jsonString);
 
-        if (options.TypeCorrection != TypeCorrectionMode.None)
+        // Attributes always runs; Schema mode only runs when it has an XSD to derive types from,
+        // so picking Schema with a blank XSD stays a true no-op even if the input XML happens to
+        // carry inline xsi:type attributes.
+        if (options.TypeCorrection == TypeCorrectionMode.Attributes || useSchema)
             CorrectTypes(token, options.ActionOnBadValues);
 
         return new Result(true, token);
@@ -91,6 +97,12 @@ public class JSON
         var schemaSet = CreateSchemaSet(xsd);
 
         var xDocument = XDocument.Parse(xml);
+
+        // In Schema mode the XSD is the single source of truth; pull any author-written
+        // xsi:type off the document up front so it can't trip the validator (an unqualified
+        // xsi:type='int' is otherwise rejected before we ever get to AddSchemaHints) or shadow
+        // a schema-derived hint.
+        RemoveInlineXsiTypeAttributes(xDocument);
 
         xDocument.Validate(
             schemaSet,
@@ -110,6 +122,22 @@ public class JSON
         xmlDocument.Load(reader);
 
         return xmlDocument;
+    }
+
+    /// <summary>
+    /// Removes any xsi:type attribute (under any prefix bound to the XML Schema Instance
+    /// namespace) from every element in the document.
+    /// </summary>
+    private static void RemoveInlineXsiTypeAttributes(XDocument document)
+    {
+        if (document.Root == null)
+            return;
+
+        XNamespace xsiNs = XsiNamespace;
+        var xsiType = xsiNs + "type";
+
+        foreach (var element in document.Root.DescendantsAndSelf())
+            element.Attribute(xsiType)?.Remove();
     }
 
     private static XmlSchemaSet CreateSchemaSet(string xsd)
@@ -208,24 +236,60 @@ public class JSON
     /// </summary>
     private static void CorrectTypes(JToken token, BadValueAction actionOnBadValues)
     {
+        CorrectTypes(token, actionOnBadValues, EmptyXmlnsScope);
+    }
+
+    private static void CorrectTypes(
+        JToken token,
+        BadValueAction actionOnBadValues,
+        IReadOnlyDictionary<string, string> xmlnsScope)
+    {
         switch (token)
         {
             case JArray array:
                 foreach (var item in array.Children().ToList())
-                    CorrectTypes(item, actionOnBadValues);
+                    CorrectTypes(item, actionOnBadValues, xmlnsScope);
                 break;
 
             case JObject obj:
+                var childScope = ExtendXmlnsScope(obj, xmlnsScope);
                 foreach (var value in obj.PropertyValues().ToList())
-                    CorrectTypes(value, actionOnBadValues);
-                ApplyTypeHint(obj, actionOnBadValues);
+                    CorrectTypes(value, actionOnBadValues, childScope);
+                ApplyTypeHint(obj, actionOnBadValues, childScope);
                 break;
         }
     }
 
-    private static void ApplyTypeHint(JObject obj, BadValueAction actionOnBadValues)
+    /// <summary>
+    /// Extends an xmlns prefix-to-namespace map with any @xmlns:* declarations carried on this
+    /// JObject, so that nested elements can resolve type-hint prefixes (e.g. xmlns:i bound here,
+    /// i:type used on a descendant). Inner declarations shadow outer ones, matching XML scope.
+    /// </summary>
+    private static IReadOnlyDictionary<string, string> ExtendXmlnsScope(
+        JObject obj,
+        IReadOnlyDictionary<string, string> parentScope)
     {
-        var typeProperty = obj.Property(XsiTypePropertyName, StringComparison.Ordinal);
+        Dictionary<string, string> extended = null;
+
+        foreach (var prop in obj.Properties())
+        {
+            if (!prop.Name.StartsWith(XmlnsPrefixSeparator, StringComparison.Ordinal))
+                continue;
+
+            extended ??= new Dictionary<string, string>(parentScope, StringComparer.Ordinal);
+            var prefix = prop.Name.Substring(XmlnsPrefixSeparator.Length);
+            extended[prefix] = prop.Value.ToString();
+        }
+
+        return extended ?? parentScope;
+    }
+
+    private static void ApplyTypeHint(
+        JObject obj,
+        BadValueAction actionOnBadValues,
+        IReadOnlyDictionary<string, string> xmlnsScope)
+    {
+        var typeProperty = FindXsiTypeProperty(obj, xmlnsScope);
         if (typeProperty == null)
             return;
 
@@ -259,6 +323,36 @@ public class JSON
             obj.Replace(converted);
         else
             textProperty.Value = converted;
+    }
+
+    /// <summary>
+    /// Finds the first attribute on this JObject named "@&lt;prefix&gt;:type" where &lt;prefix&gt; is
+    /// bound (in the active xmlns scope) to the XML Schema Instance namespace. Newtonsoft
+    /// preserves the source prefix, so authors using xmlns:i (instead of the conventional xsi)
+    /// still get their type hints honoured.
+    /// </summary>
+    private static JProperty FindXsiTypeProperty(JObject obj, IReadOnlyDictionary<string, string> xmlnsScope)
+    {
+        foreach (var prop in obj.Properties())
+        {
+            if (prop.Name.Length < 2 || prop.Name[0] != '@')
+                continue;
+
+            var colonIndex = prop.Name.IndexOf(':');
+            if (colonIndex < 0)
+                continue;
+
+            var local = prop.Name.Substring(colonIndex + 1);
+            if (!string.Equals(local, "type", StringComparison.Ordinal))
+                continue;
+
+            var prefix = prop.Name.Substring(1, colonIndex - 1);
+            if (xmlnsScope.TryGetValue(prefix, out var ns) &&
+                string.Equals(ns, XsiNamespace, StringComparison.Ordinal))
+                return prop;
+        }
+
+        return null;
     }
 
     private static bool IsXsiNamespaceDeclaration(JProperty property)
@@ -306,16 +400,14 @@ public class JSON
 
     private static JValue ParseBoolean(string value)
     {
-        switch (value.Trim())
-        {
-            case "true":
-            case "1":
-                return new JValue(true);
-            case "false":
-            case "0":
-                return new JValue(false);
-            default:
-                return null;
-        }
+        var trimmed = value.Trim();
+
+        if (trimmed == "1" || string.Equals(trimmed, "true", StringComparison.OrdinalIgnoreCase))
+            return new JValue(true);
+
+        if (trimmed == "0" || string.Equals(trimmed, "false", StringComparison.OrdinalIgnoreCase))
+            return new JValue(false);
+
+        return null;
     }
 }
