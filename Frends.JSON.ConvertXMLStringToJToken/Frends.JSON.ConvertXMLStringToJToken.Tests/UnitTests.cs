@@ -242,6 +242,230 @@ public class UnitTests
     }
 
     [TestMethod]
+    public void NoneMode_ShouldNotTouchXsiNilWrappers()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <fax xsi:nil='true'/>
+                      <phone xsi:nil='false'/>
+                    </root>"
+        };
+
+        // In None mode the task does no type/nullability processing, so Newtonsoft's raw
+        // shape (wrapper objects holding @xsi:nil) is preserved verbatim. Anyone relying on
+        // the pre-2.0.0 output stays unaffected by the xsi:nil feature.
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.None });
+        var root = (JObject)((JObject)result.Jtoken)["root"];
+
+        Assert.AreEqual("true", root["fax"]?["@xsi:nil"]?.ToString());
+        Assert.AreEqual("false", root["phone"]?["@xsi:nil"]?.ToString());
+    }
+
+    [TestMethod]
+    public void AttributesMode_XsiNilTrue_EmptyElement_ShouldBecomeNull()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <fax xsi:nil='true'/>
+                    </root>"
+        };
+
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var fax = ((JObject)result.Jtoken)["root"]?["fax"];
+
+        Assert.IsNotNull(fax);
+        Assert.AreEqual(JTokenType.Null, fax.Type);
+    }
+
+    [TestMethod]
+    public void AttributesMode_XsiNilTrue_WithContent_ShouldUseContent()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <fax xsi:nil='true'>123</fax>
+                      <count xsi:type='int' xsi:nil='true'>42</count>
+                    </root>"
+        };
+
+        // Content wins over the nil flag: the string "123" survives, and the typed element
+        // still converts to integer 42 via the normal xsi:type path.
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var root = (JObject)((JObject)result.Jtoken)["root"];
+
+        Assert.AreEqual(JTokenType.String, root["fax"].Type);
+        Assert.AreEqual("123", root["fax"].ToString());
+        Assert.AreEqual(JTokenType.Integer, root["count"].Type);
+        Assert.AreEqual(42, root["count"].Value<int>());
+    }
+
+    [TestMethod]
+    public void AttributesMode_XsiNilFalse_EmptyElement_ShouldUseTypeDefault()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <count xsi:type='int' xsi:nil='false'/>
+                      <ratio xsi:type='float' xsi:nil='false'/>
+                      <inStock xsi:type='boolean' xsi:nil='false'/>
+                    </root>"
+        };
+
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var root = (JObject)((JObject)result.Jtoken)["root"];
+
+        Assert.AreEqual(JTokenType.Integer, root["count"].Type);
+        Assert.AreEqual(0L, root["count"].Value<long>());
+        Assert.AreEqual(JTokenType.Float, root["ratio"].Type);
+        Assert.AreEqual(0d, root["ratio"].Value<double>());
+        Assert.AreEqual(JTokenType.Boolean, root["inStock"].Type);
+        Assert.IsFalse(root["inStock"].Value<bool>());
+    }
+
+    [TestMethod]
+    public void AttributesMode_XsiNilFalse_WithContent_ShouldStripNilAndKeepContent()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <count xsi:type='int' xsi:nil='false'>5</count>
+                    </root>"
+        };
+
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var count = ((JObject)result.Jtoken)["root"]?["count"];
+
+        Assert.AreEqual(JTokenType.Integer, count.Type);
+        Assert.AreEqual(5, count.Value<int>());
+    }
+
+    [TestMethod]
+    public void AttributesMode_XsiNilFalse_WithoutTypeInfo_ShouldBeNoOp()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <fax xsi:nil='false'/>
+                    </root>"
+        };
+
+        // No xsi:type → we have no type info to coerce against. Per spec, leave the wrapper
+        // alone (xsi:nil attribute stays so the caller can see the marker if they want).
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var fax = ((JObject)result.Jtoken)["root"]?["fax"];
+
+        Assert.IsInstanceOfType(fax, typeof(JObject));
+        Assert.AreEqual("false", fax["@xsi:nil"].ToString());
+    }
+
+    [TestMethod]
+    public void AttributesMode_XsiNilFalse_PreservesOtherAttributes()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <price currency='EUR' xsi:type='float' xsi:nil='false'/>
+                    </root>"
+        };
+
+        // Element carries another data attribute, so the wrapper must survive. xsi:nil and
+        // xsi:type are consumed; #text becomes the typed default; @currency stays untouched.
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var price = ((JObject)result.Jtoken)["root"]?["price"];
+
+        Assert.IsInstanceOfType(price, typeof(JObject));
+        Assert.AreEqual("EUR", price["@currency"].ToString());
+        Assert.IsNull(price["@xsi:type"]);
+        Assert.IsNull(price["@xsi:nil"]);
+        Assert.AreEqual(JTokenType.Float, price["#text"].Type);
+        Assert.AreEqual(0d, price["#text"].Value<double>());
+    }
+
+    [TestMethod]
+    public void AttributesMode_XsiNilFalse_HonoursAliasedPrefix()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:i='http://www.w3.org/2001/XMLSchema-instance'>
+                      <count i:type='int' i:nil='false'/>
+                    </root>"
+        };
+
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var count = ((JObject)result.Jtoken)["root"]?["count"];
+
+        Assert.AreEqual(JTokenType.Integer, count.Type);
+        Assert.AreEqual(0L, count.Value<long>());
+    }
+
+    [TestMethod]
+    public void SchemaMode_XsiNilFalse_EmptyStringElement_ShouldBecomeEmptyString()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <name xsi:nil='false'/>
+                    </root>"
+        };
+
+        var options = new Options()
+        {
+            TypeCorrection = TypeCorrectionMode.Schema,
+            XSD = @"<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                      <xs:element name='root'>
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name='name' type='xs:string' nillable='true' />
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:schema>"
+        };
+
+        // Schema declares the element as xs:string. xsi:nil='false' on an empty element means
+        // "do not allow null" — for a string that's an empty string.
+        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var name = ((JObject)result.Jtoken)["root"]?["name"];
+
+        Assert.IsNotNull(name);
+        Assert.AreEqual(JTokenType.String, name.Type);
+        Assert.AreEqual(string.Empty, name.ToString());
+    }
+
+    [TestMethod]
+    public void SchemaMode_XsiNilTrue_EmptyNillableElement_ShouldBecomeNull()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <fax xsi:nil='true'/>
+                    </root>"
+        };
+
+        var options = new Options()
+        {
+            TypeCorrection = TypeCorrectionMode.Schema,
+            XSD = @"<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                      <xs:element name='root'>
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name='fax' type='xs:string' nillable='true' />
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:schema>"
+        };
+
+        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var fax = ((JObject)result.Jtoken)["root"]?["fax"];
+
+        Assert.IsNotNull(fax);
+        Assert.AreEqual(JTokenType.Null, fax.Type);
+    }
+
+    [TestMethod]
     public void AttributesMode_ShouldLeaveUnparseableValuesAsStrings()
     {
         var input = new Input()

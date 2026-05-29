@@ -79,8 +79,14 @@ public class JSON
         // Attributes always runs; Schema mode only runs when it has an XSD to derive types from,
         // so picking Schema with a blank XSD stays a true no-op even if the input XML happens to
         // carry inline xsi:type attributes.
-        if (options.TypeCorrection == TypeCorrectionMode.Attributes || useSchema)
-            CorrectTypes(token, options.ActionOnBadValues);
+        var effectiveMode = useSchema
+            ? TypeCorrectionMode.Schema
+            : options.TypeCorrection == TypeCorrectionMode.Attributes
+                ? TypeCorrectionMode.Attributes
+                : TypeCorrectionMode.None;
+
+        if (effectiveMode != TypeCorrectionMode.None)
+            CorrectTypes(token, options.ActionOnBadValues, effectiveMode);
 
         return new Result(true, token);
     }
@@ -234,27 +240,34 @@ public class JSON
     /// removing the consumed xsi:type attribute and collapsing the wrapper object when only the
     /// converted value remains.
     /// </summary>
-    private static void CorrectTypes(JToken token, BadValueAction actionOnBadValues)
+    private static void CorrectTypes(JToken token, BadValueAction actionOnBadValues, TypeCorrectionMode mode)
     {
-        CorrectTypes(token, actionOnBadValues, EmptyXmlnsScope);
+        CorrectTypes(token, actionOnBadValues, mode, EmptyXmlnsScope);
     }
 
     private static void CorrectTypes(
         JToken token,
         BadValueAction actionOnBadValues,
+        TypeCorrectionMode mode,
         IReadOnlyDictionary<string, string> xmlnsScope)
     {
         switch (token)
         {
             case JArray array:
                 foreach (var item in array.Children().ToList())
-                    CorrectTypes(item, actionOnBadValues, xmlnsScope);
+                    CorrectTypes(item, actionOnBadValues, mode, xmlnsScope);
                 break;
 
             case JObject obj:
                 var childScope = ExtendXmlnsScope(obj, xmlnsScope);
                 foreach (var value in obj.PropertyValues().ToList())
-                    CorrectTypes(value, actionOnBadValues, childScope);
+                    CorrectTypes(value, actionOnBadValues, mode, childScope);
+
+                // xsi:nil handling runs first so it can collapse the wrapper to a default/null
+                // (or strip the attribute so ApplyTypeHint sees a clean element).
+                if (ApplyXsiNil(obj, mode, childScope))
+                    break;
+
                 ApplyTypeHint(obj, actionOnBadValues, childScope);
                 break;
         }
@@ -325,13 +338,22 @@ public class JSON
             textProperty.Value = converted;
     }
 
+    private static JProperty FindXsiTypeProperty(JObject obj, IReadOnlyDictionary<string, string> xmlnsScope) =>
+        FindXsiNamespacedAttribute(obj, "type", xmlnsScope);
+
+    private static JProperty FindXsiNilProperty(JObject obj, IReadOnlyDictionary<string, string> xmlnsScope) =>
+        FindXsiNamespacedAttribute(obj, "nil", xmlnsScope);
+
     /// <summary>
-    /// Finds the first attribute on this JObject named "@&lt;prefix&gt;:type" where &lt;prefix&gt; is
-    /// bound (in the active xmlns scope) to the XML Schema Instance namespace. Newtonsoft
-    /// preserves the source prefix, so authors using xmlns:i (instead of the conventional xsi)
-    /// still get their type hints honoured.
+    /// Finds the first attribute on this JObject named "@&lt;prefix&gt;:&lt;localName&gt;" where
+    /// &lt;prefix&gt; is bound (in the active xmlns scope) to the XML Schema Instance namespace.
+    /// Newtonsoft preserves the source prefix, so authors using xmlns:i (instead of the
+    /// conventional xsi) still get their type/nil hints honoured.
     /// </summary>
-    private static JProperty FindXsiTypeProperty(JObject obj, IReadOnlyDictionary<string, string> xmlnsScope)
+    private static JProperty FindXsiNamespacedAttribute(
+        JObject obj,
+        string localName,
+        IReadOnlyDictionary<string, string> xmlnsScope)
     {
         foreach (var prop in obj.Properties())
         {
@@ -343,7 +365,7 @@ public class JSON
                 continue;
 
             var local = prop.Name.Substring(colonIndex + 1);
-            if (!string.Equals(local, "type", StringComparison.Ordinal))
+            if (!string.Equals(local, localName, StringComparison.Ordinal))
                 continue;
 
             var prefix = prop.Name.Substring(1, colonIndex - 1);
@@ -353,6 +375,168 @@ public class JSON
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Applies xsi:nil semantics. Returns true when the JObject was replaced/finalised and no
+    /// further type-hint processing is needed on it.
+    /// <para>nil="true" empty → JSON null (replacing the wrapper).
+    /// nil="true" with content → strip the attribute, let content flow through.
+    /// nil="false" empty → coerce to default(T) (T from xsi:type, or "" when Schema mode
+    /// validated the element without providing a convertible type; Attributes mode without
+    /// xsi:type is left alone).
+    /// nil="false" with content → strip the attribute, let content flow through.</para>
+    /// </summary>
+    private static bool ApplyXsiNil(
+        JObject obj,
+        TypeCorrectionMode mode,
+        IReadOnlyDictionary<string, string> xmlnsScope)
+    {
+        var nilProperty = FindXsiNilProperty(obj, xmlnsScope);
+        if (nilProperty == null)
+            return false;
+
+        var nilFlag = ParseNilFlag(nilProperty.Value.ToString());
+        if (nilFlag == null)
+            return false;
+
+        var textProperty = obj.Property(TextPropertyName, StringComparison.Ordinal);
+        if (HasContent(obj, textProperty))
+        {
+            // Content wins — drop the nil attribute. If the wrapper now has nothing else
+            // meaningful to carry (no xsi:type for further conversion, no other attributes),
+            // collapse it to the bare text value so the shape matches an authored element
+            // that never had xsi:nil.
+            nilProperty.Remove();
+
+            var typeProperty = FindXsiTypeProperty(obj, xmlnsScope);
+            if (typeProperty == null && textProperty != null &&
+                obj.Parent != null && OnlyTextOrNamespaceDeclarations(obj))
+            {
+                obj.Replace(textProperty.Value);
+                return true;
+            }
+
+            return false;
+        }
+
+        // Empty element — handle the nil flag.
+        if (nilFlag == true)
+        {
+            nilProperty.Remove();
+            ReplaceOrClearWrapper(obj, textProperty, JValue.CreateNull());
+            return true;
+        }
+
+        // nil = false on an empty element: coerce to default(T), but only when we actually
+        // have type info to derive T from.
+        var typePropertyForDefault = FindXsiTypeProperty(obj, xmlnsScope);
+        JValue defaultValue;
+
+        if (typePropertyForDefault != null)
+        {
+            defaultValue = DefaultValueForTypeName(LocalName(typePropertyForDefault.Value.ToString()));
+            typePropertyForDefault.Remove();
+        }
+        else if (mode == TypeCorrectionMode.Schema)
+        {
+            // The schema validated this element; a missing xsi:type means the schema's type is
+            // a non-convertible one (xs:string or similar). Default to an empty string.
+            defaultValue = new JValue(string.Empty);
+        }
+        else
+        {
+            // Attributes mode with no inline xsi:type: per design, only act when type info is
+            // present. Leave xsi:nil in place so the caller can still see the marker.
+            return false;
+        }
+
+        nilProperty.Remove();
+        ReplaceOrClearWrapper(obj, textProperty, defaultValue);
+        return true;
+    }
+
+    private static bool OnlyTextOrNamespaceDeclarations(JObject obj)
+    {
+        foreach (var prop in obj.Properties())
+        {
+            if (prop.Name == TextPropertyName)
+                continue;
+            if (prop.Name.StartsWith("@xmlns", StringComparison.Ordinal))
+                continue;
+            return false;
+        }
+        return true;
+    }
+
+    private static bool? ParseNilFlag(string value)
+    {
+        var trimmed = value?.Trim() ?? string.Empty;
+
+        if (trimmed == "1" || string.Equals(trimmed, "true", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (trimmed == "0" || string.Equals(trimmed, "false", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return null;
+    }
+
+    private static bool HasContent(JObject obj, JProperty textProperty)
+    {
+        if (textProperty != null && textProperty.Value.Type == JTokenType.String &&
+            !string.IsNullOrEmpty(textProperty.Value.ToString()))
+            return true;
+
+        foreach (var prop in obj.Properties())
+        {
+            if (prop.Name.Length == 0 || prop.Name[0] == '@' || prop.Name == TextPropertyName)
+                continue;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// When the wrapper's only remaining properties are namespace declarations, collapse it to
+    /// the new scalar value. Otherwise preserve the wrapper (other attributes are still
+    /// meaningful) and assign the value to #text.
+    /// </summary>
+    private static void ReplaceOrClearWrapper(JObject obj, JProperty existingTextProperty, JValue newValue)
+    {
+        var canCollapse = obj.Parent != null &&
+            obj.Properties().All(p => p.Name.StartsWith("@xmlns", StringComparison.Ordinal));
+
+        if (canCollapse)
+        {
+            obj.Replace(newValue);
+            return;
+        }
+
+        if (existingTextProperty != null)
+            existingTextProperty.Value = newValue;
+        else
+            obj[TextPropertyName] = newValue;
+    }
+
+    /// <summary>
+    /// Mirrors C# default(T) for the recognized XSD-ish type names; unknown types fall back to
+    /// an empty string so callers always get a usable JSON value.
+    /// </summary>
+    private static JValue DefaultValueForTypeName(string typeName)
+    {
+        if (string.IsNullOrEmpty(typeName) || !TypeConverters.ContainsKey(typeName))
+            return new JValue(string.Empty);
+
+        return typeName.ToLowerInvariant() switch
+        {
+            "float" or "double" => new JValue(0d),
+            "decimal" => new JValue(0m),
+            "boolean" => new JValue(false),
+            _ => new JValue(0L),
+        };
     }
 
     private static bool IsXsiNamespaceDeclaration(JProperty property)
