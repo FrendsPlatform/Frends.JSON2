@@ -324,7 +324,7 @@ public class UnitTests
         Assert.AreEqual(JTokenType.Boolean, root["inStock"].Type);
         Assert.IsFalse(root["inStock"].Value<bool>());
         Assert.AreEqual(JTokenType.String, root["str"].Type);
-        Assert.AreEqual(string.Empty,  root["str"].Value<string>());
+        Assert.AreEqual(string.Empty, root["str"].Value<string>());
     }
 
     [TestMethod]
