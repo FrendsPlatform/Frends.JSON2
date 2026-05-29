@@ -310,6 +310,7 @@ public class UnitTests
                       <count xsi:type='int' xsi:nil='false'/>
                       <ratio xsi:type='float' xsi:nil='false'/>
                       <inStock xsi:type='boolean' xsi:nil='false'/>
+                      <str xsi:type='string' xsi:nil='false'/>
                     </root>"
         };
 
@@ -322,6 +323,8 @@ public class UnitTests
         Assert.AreEqual(0d, root["ratio"].Value<double>());
         Assert.AreEqual(JTokenType.Boolean, root["inStock"].Type);
         Assert.IsFalse(root["inStock"].Value<bool>());
+        Assert.AreEqual(JTokenType.String, root["str"].Type);
+        Assert.AreEqual(string.Empty,  root["str"].Value<string>());
     }
 
     [TestMethod]
