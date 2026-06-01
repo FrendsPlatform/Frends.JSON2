@@ -528,6 +528,10 @@ public class UnitTests
         Assert.AreEqual(JTokenType.Boolean, root["inStock"].Type);
         Assert.IsTrue(root["inStock"].Value<bool>());
         Assert.AreEqual(JTokenType.String, root["name"].Type);
+
+        // The xmlns:xsi declaration the task injects to carry derived xsi:type hints must not
+        // leak into the output once those hints have been consumed.
+        Assert.IsNull(root["@xmlns:xsi"]);
     }
 
     [TestMethod]
@@ -680,6 +684,26 @@ public class UnitTests
         var result = JSON.ConvertXMLStringToJToken(input, options);
 
         Assert.IsTrue(result.Success);
+    }
+
+    [TestMethod]
+    public void TypeCorrection_ShouldKeepXsiNamespaceWhenAnXsiAttributeSurvives()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <data xsi:type='hexBinary'>DEADBEEF</data>
+                    </root>"
+        };
+
+        // hexBinary is not convertible, so @xsi:type survives — the xmlns:xsi declaration that
+        // it depends on must be preserved rather than pruned as unused.
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var root = ((JObject)result.Jtoken)["root"] as JObject;
+
+        Assert.IsNotNull(root);
+        Assert.AreEqual("http://www.w3.org/2001/XMLSchema-instance", root["@xmlns:xsi"]?.ToString());
+        Assert.AreEqual("hexBinary", root["data"]?["@xsi:type"]?.ToString());
     }
 
     [TestMethod]

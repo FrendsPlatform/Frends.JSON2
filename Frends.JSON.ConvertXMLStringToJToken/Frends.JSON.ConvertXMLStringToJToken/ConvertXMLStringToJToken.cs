@@ -86,7 +86,14 @@ public class JSON
                 : TypeCorrectionMode.None;
 
         if (effectiveMode != TypeCorrectionMode.None)
+        {
             CorrectTypes(token, options.ActionOnBadValues, effectiveMode);
+
+            // Schema mode injects an xmlns:xsi declaration to carry the derived xsi:type hints
+            // (see AddSchemaHints). Once CorrectTypes has consumed those hints the declaration is
+            // orphaned, so strip it (and any other now-unused xsi declaration) from the output.
+            RemoveUnusedXsiNamespaceDeclarations(token);
+        }
 
         return new Result(true, token);
     }
@@ -537,6 +544,68 @@ public class JSON
             "boolean" => new JValue(false),
             _ => new JValue(0L),
         };
+    }
+
+    /// <summary>
+    /// Removes XML Schema Instance namespace declarations (e.g. @xmlns:xsi) that no surviving
+    /// xsi:-prefixed attribute still references. Declarations bound to a prefix that is still in
+    /// use (e.g. an unconverted xsi:type or a retained xsi:nil) are left intact.
+    /// </summary>
+    private static void RemoveUnusedXsiNamespaceDeclarations(JToken token)
+    {
+        switch (token)
+        {
+            case JArray array:
+                foreach (var item in array.Children().ToList())
+                    RemoveUnusedXsiNamespaceDeclarations(item);
+                break;
+
+            case JObject obj:
+                var declarations = obj.Properties()
+                    .Where(p => p.Name.StartsWith(XmlnsPrefixSeparator, StringComparison.Ordinal)
+                        && IsXsiNamespaceDeclaration(p))
+                    .ToList();
+
+                foreach (var declaration in declarations)
+                {
+                    var prefix = declaration.Name.Substring(XmlnsPrefixSeparator.Length);
+                    if (!IsPrefixedAttributeUsed(obj, "@" + prefix + ":"))
+                        declaration.Remove();
+                }
+
+                foreach (var value in obj.PropertyValues().ToList())
+                    RemoveUnusedXsiNamespaceDeclarations(value);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Returns true when any attribute named "&lt;marker&gt;..." (e.g. "@xsi:") appears on this
+    /// token or anywhere in its subtree — the scope over which a namespace declaration applies.
+    /// </summary>
+    private static bool IsPrefixedAttributeUsed(JToken token, string marker)
+    {
+        switch (token)
+        {
+            case JObject obj:
+                foreach (var prop in obj.Properties())
+                {
+                    if (prop.Name.StartsWith(marker, StringComparison.Ordinal))
+                        return true;
+                    if (IsPrefixedAttributeUsed(prop.Value, marker))
+                        return true;
+                }
+                return false;
+
+            case JArray array:
+                foreach (var item in array.Children())
+                    if (IsPrefixedAttributeUsed(item, marker))
+                        return true;
+                return false;
+
+            default:
+                return false;
+        }
     }
 
     private static bool IsXsiNamespaceDeclaration(JProperty property)
