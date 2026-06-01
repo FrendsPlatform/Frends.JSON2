@@ -1,0 +1,23 @@
+[
+    {
+        "Task": "Frends.JSON.ConvertXMLStringToJToken.JSON.ConvertXMLStringToJToken",
+        "Migrations": [
+            {
+                "Version": "2.0.0",
+                "Description": "Moved the XSD parameter from the Input tab to the Options tab.",
+                "Migration": [
+                    {
+                        "Type": "Copy",
+                        "Source": "Input.XSD",
+                        "Target": "Options.XSD"
+                    },
+                    {
+                        "Type": "Set",
+                        "Target": "Options.TypeCorrection",
+                        "Value": "Schema"
+                    }
+                ]
+            }
+        ]
+    }
+]
