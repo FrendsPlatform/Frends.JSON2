@@ -848,4 +848,90 @@ public class UnitTests
         Assert.AreEqual(JTokenType.String, price["#text"].Type);
         Assert.AreEqual("12.5", price["#text"].ToString());
     }
+
+    [TestMethod]
+    public void SchemaMode_FoobarEmptyNillableNonString_ShouldBecomeNull()
+    {
+        var input = new Input()
+        {
+            XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+                      <foobar1 xsi:nil='true'/>
+                      <foobar2 xsi:nil='true'/>
+                      <foobar3 xsi:nil='true'/>
+                    </root>"
+        };
+
+        var options = new Options()
+        {
+            TypeCorrection = TypeCorrectionMode.Schema,
+            XSD = @"<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                      <xs:element name='root'>
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name='foobar1' type='xs:int' nillable='true' />
+                            <xs:element name='foobar2' type='xs:boolean' nillable='true' />
+                            <xs:element name='foobar3' type='xs:double' nillable='true' />
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:schema>"
+        };
+
+        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var foobar1 = ((JObject)result.Jtoken)["root"]?["foobar1"];
+        var foobar2 = ((JObject)result.Jtoken)["root"]?["foobar2"];
+        var foobar3 = ((JObject)result.Jtoken)["root"]?["foobar3"];
+        Assert.IsNotNull(foobar1);
+        Assert.IsNotNull(foobar2);
+        Assert.IsNotNull(foobar3);
+        Assert.AreEqual(JTokenType.Null, foobar1.Type);
+        Assert.AreEqual(JTokenType.Null, foobar2.Type);
+        Assert.AreEqual(JTokenType.Null, foobar3.Type);
+    }
+
+    [TestMethod]
+    public void SchemaMode_FoobarNonString_ShouldBecomeValidType()
+    {
+        var input = new Input()
+        {
+            XML = @"<root>
+                      <foobar1>3</foobar1>
+                      <foobar2>2.3</foobar2>
+                      <foobar3>true</foobar3>
+                    </root>"
+        };
+
+        var options = new Options()
+        {
+            TypeCorrection = TypeCorrectionMode.Schema,
+            XSD = @"<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                      <xs:element name='root'>
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name='foobar1' type='xs:int' nillable='true' />
+                            <xs:element name='foobar2' type='xs:double' nillable='true' />
+                            <xs:element name='foobar3' type='xs:boolean' nillable='true' />
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:schema>"
+        };
+
+        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var foobar1 = ((JObject)result.Jtoken)["root"]?["foobar1"];
+        var foobar2 = ((JObject)result.Jtoken)["root"]?["foobar2"];
+        var foobar3 = ((JObject)result.Jtoken)["root"]?["foobar3"];
+
+        Assert.IsNotNull(foobar1);
+        Assert.IsNotNull(foobar2);
+        Assert.IsNotNull(foobar3);
+
+        Assert.AreEqual(JTokenType.Integer, foobar1.Type);
+        Assert.AreEqual(JTokenType.Float, foobar2.Type);
+        Assert.AreEqual(JTokenType.Boolean, foobar3.Type);
+
+        Assert.AreEqual(3, foobar1.Value<int>());
+        Assert.AreEqual(2.3, foobar2.Value<double>());
+        Assert.AreEqual(true, foobar3.Value<bool>());
+    }
 }

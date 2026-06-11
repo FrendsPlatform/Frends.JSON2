@@ -431,7 +431,13 @@ public class JSON
         if (nilFlag == true)
         {
             nilProperty.Remove();
-            ReplaceOrClearWrapper(obj, textProperty, JValue.CreateNull());
+            var typePropertyForNil = FindXsiTypeProperty(obj, xmlnsScope);
+            typePropertyForNil?.Remove();
+
+            if (obj.Parent != null)
+                obj.Replace(JValue.CreateNull());
+            else
+                ReplaceOrClearWrapper(obj, textProperty, JValue.CreateNull());
             return true;
         }
 
