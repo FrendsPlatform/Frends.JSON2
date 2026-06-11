@@ -2,7 +2,7 @@
 
 ## [2.1.0] - 2026-06-11
 ### Fixed
-Fix a case when we want to return null value for non-string types.
+- Fix a case when we want to return null value for non-string types.
 
 ## [2.0.0] - 2026-05-27
 ### Breaking
