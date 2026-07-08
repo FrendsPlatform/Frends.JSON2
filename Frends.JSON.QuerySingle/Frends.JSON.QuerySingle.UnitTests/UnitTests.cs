@@ -78,6 +78,23 @@ public class UnitTests
     }
 
     [TestMethod]
+    public void QuerySingleShouldThrowIfOptionSetAndFilterMatchesNothing()
+    {
+        var input = new Input()
+        {
+            Json = jsonString,
+            Query = "$.Manufacturers[?(@.Name == 'Nonexistent Co')]"
+        };
+
+        var options = new Options()
+        {
+            ErrorWhenNotMatched = true,
+        };
+
+        Assert.ThrowsException<JsonException>(() => JSON.QuerySingle(input, options));
+    }
+
+    [TestMethod]
     public void QuerySingleShouldNotThrowIfOptionNotSetAndNothingIsFound()
     {
         var input = new Input()
