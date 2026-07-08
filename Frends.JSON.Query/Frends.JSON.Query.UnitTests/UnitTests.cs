@@ -1,5 +1,6 @@
 using Frends.JSON.Query.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Frends.JSON.Query.UnitTests;
@@ -77,6 +78,23 @@ public class UnitTests
         Assert.IsTrue(result.Success);
         Assert.AreEqual(2, result.Data.Count());
         Assert.AreEqual("Anvil", result.Data.First().ToString());
+    }
+
+    [TestMethod]
+    public void QueryShouldThrowIfOptionSetAndFilterMatchesNothing()
+    {
+        var input = new Input()
+        {
+            Json = jsonString,
+            Query = "$..Products[?(@.Price >= 1000)].Name"
+        };
+
+        var options = new Options()
+        {
+            ErrorWhenNotMatched = true,
+        };
+
+        Assert.ThrowsException<JsonException>(() => JSON.Query(input, options));
     }
 
     [TestMethod]

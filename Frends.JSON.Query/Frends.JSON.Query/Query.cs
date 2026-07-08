@@ -1,7 +1,9 @@
 ﻿using Frends.JSON.Query.Definitions;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 
@@ -31,7 +33,12 @@ public class JSON
     public static Result Query([PropertyTab] Input input, [PropertyTab] Options options)
     {
         JToken jToken = GetJTokenFromInput(input.Json);
-        return new Result(true, jToken.SelectTokens(input.Query, options.ErrorWhenNotMatched));
+        var tokens = jToken.SelectTokens(input.Query, options.ErrorWhenNotMatched).ToList();
+
+        if (tokens.Count == 0 && options.ErrorWhenNotMatched)
+            throw new JsonException($"No matches found for query '{input.Query}'.");
+
+        return new Result(true, tokens);
     }
 
     private static object GetJTokenFromInput(dynamic json)
