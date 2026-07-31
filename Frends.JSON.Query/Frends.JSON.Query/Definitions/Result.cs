@@ -19,9 +19,20 @@ public class Result
     /// <example>[ { Foo }, { Bar } ]</example>
     public IEnumerable<object> Data { get; private set; }
 
+    /// <summary>
+    /// Error information, populated when the task fails and ThrowErrorOnFailure is false.
+    /// </summary>
+    public Error Error { get; private set; }
+
     internal Result(bool success, IEnumerable<object> data)
     {
         Success = success;
         Data = data;
+    }
+
+    internal Result(Error error)
+    {
+        Success = false;
+        Error = error;
     }
 }
