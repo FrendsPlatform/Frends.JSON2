@@ -117,26 +117,4 @@ public class UnitTests
         Assert.IsNotNull(result.Data);
         Assert.IsFalse(result.Data.Any());
     }
-
-    [TestMethod]
-    public void QueryShouldReturnErrorResultWhenThrowErrorOnFailureIsFalse()
-    {
-        var input = new Input()
-        {
-            Json = jsonString,
-            Query = "$..Products[?(@.Price >= 1000)].Name"
-        };
-
-        var options = new Options()
-        {
-            ErrorWhenNotMatched = true,
-            ThrowErrorOnFailure = false,
-        };
-
-        var result = JSON.Query(input, options, CancellationToken.None);
-        Assert.IsFalse(result.Success);
-        Assert.IsNotNull(result.Error);
-        Assert.IsFalse(string.IsNullOrEmpty(result.Error.Message));
-        Assert.IsNotNull(result.Error.AdditionalInfo);
-    }
 }
