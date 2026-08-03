@@ -11,28 +11,16 @@ public class Result
     /// Operation complete without errors.
     /// </summary>
     /// <example>true</example>
-    public bool Success { get; private set; }
+    public bool Success { get; internal set; }
 
     /// <summary>
     /// Result data.
     /// </summary>
     /// <example>[ { Foo }, { Bar } ]</example>
-    public IEnumerable<object> Data { get; private set; }
+    public IEnumerable<object> Data { get; internal set; }
 
     /// <summary>
     /// Error information, populated when the task fails and ThrowErrorOnFailure is false.
     /// </summary>
-    public Error Error { get; private set; }
-
-    internal Result(bool success, IEnumerable<object> data)
-    {
-        Success = success;
-        Data = data;
-    }
-
-    internal Result(Error error)
-    {
-        Success = false;
-        Error = error;
-    }
+    public Error Error { get; internal set; }
 }

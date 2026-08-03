@@ -1,4 +1,5 @@
 ﻿using Frends.JSON.Query.Definitions;
+using Frends.JSON.Query.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -44,30 +45,11 @@ public static class JSON
             if (tokens.Count == 0 && options.ErrorWhenNotMatched)
                 throw new JsonException($"No matches found for query '{input.Query}'.");
 
-            return new Result(true, tokens);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
+            return new Result { Success = true, Data = tokens };
         }
         catch (Exception ex)
         {
-            if (options.ThrowErrorOnFailure)
-            {
-                if (string.IsNullOrEmpty(options.ErrorMessageOnFailure))
-                    throw new Exception(ex.Message, ex);
-                throw new Exception(options.ErrorMessageOnFailure, ex);
-            }
-
-            var errorMessage = string.IsNullOrEmpty(options.ErrorMessageOnFailure)
-                ? ex.Message
-                : $"{options.ErrorMessageOnFailure}: {ex.Message}";
-
-            return new Result(new Error
-            {
-                Message = errorMessage,
-                AdditionalInfo = ex,
-            });
+            return ex.Handle(options);
         }
     }
 
