@@ -2,6 +2,7 @@ using Frends.JSON.QuerySingle.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace Frends.JSON.QuerySingle.UnitTests;
 
@@ -54,7 +55,7 @@ public class UnitTests
             ErrorWhenNotMatched = true,
         };
 
-        var result = JSON.QuerySingle(input, options);
+        var result = JSON.QuerySingle(input, options, CancellationToken.None);
         Assert.IsTrue(result.Success);
         Assert.IsInstanceOfType(result.Data, typeof(JObject));
     }
@@ -73,8 +74,8 @@ public class UnitTests
             ErrorWhenNotMatched = true,
         };
 
-        var ex = Assert.ThrowsException<JsonException>(() => JSON.QuerySingle(input, options));
-        Assert.IsTrue(ex.Message.Contains("Property 'Manufacturer' does not exist on JObject."));
+        var ex = Assert.ThrowsException<Exception>(() => JSON.QuerySingle(input, options, CancellationToken.None));
+        Assert.IsTrue(ex.Message.Contains("Property 'Manufacturer' does not exist on JObject.") || (ex.InnerException != null && ex.InnerException.Message.Contains("Property 'Manufacturer' does not exist on JObject.")));
     }
 
     [TestMethod]
@@ -91,7 +92,7 @@ public class UnitTests
             ErrorWhenNotMatched = true,
         };
 
-        Assert.ThrowsException<JsonException>(() => JSON.QuerySingle(input, options));
+        Assert.ThrowsException<Exception>(() => JSON.QuerySingle(input, options, CancellationToken.None));
     }
 
     [TestMethod]
@@ -108,7 +109,7 @@ public class UnitTests
             ErrorWhenNotMatched = false,
         };
 
-        var result = JSON.QuerySingle(input, options);
+        var result = JSON.QuerySingle(input, options, CancellationToken.None);
         Assert.IsTrue(result.Success);
         Assert.IsNull(result.Data);
     }

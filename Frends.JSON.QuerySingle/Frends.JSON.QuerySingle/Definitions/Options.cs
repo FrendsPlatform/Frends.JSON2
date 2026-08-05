@@ -1,4 +1,7 @@
-﻿namespace Frends.JSON.QuerySingle.Definitions;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace Frends.JSON.QuerySingle.Definitions;
 
 /// <summary>
 /// Options parameters.
@@ -10,4 +13,19 @@ public class Options
     /// </summary>
     /// <example>true</example>
     public bool ErrorWhenNotMatched { get; set; }
+
+    /// <summary>
+    /// Throw an exception if the task fails.
+    /// </summary>
+    /// <example>true</example>
+    [DefaultValue(true)]
+    public bool ThrowErrorOnFailure { get; set; } = true;
+
+    /// <summary>
+    /// Custom error message to include when the task fails. Leave empty to use the default error message.
+    /// </summary>
+    /// <example></example>
+    [DisplayFormat(DataFormatString = "Text")]
+    [DefaultValue("")]
+    public string ErrorMessageOnFailure { get; set; } = string.Empty;
 }
