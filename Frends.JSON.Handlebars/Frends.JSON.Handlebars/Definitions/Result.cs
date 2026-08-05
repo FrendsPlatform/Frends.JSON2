@@ -9,17 +9,24 @@ public class Result
     /// Operation complete without errors.
     /// </summary>
     /// <example>true</example>
-    public bool Success { get; private set; }
+    public bool Success { get; internal set; }
 
     /// <summary>
     /// Result data.
     /// </summary>
     /// <example>&lt;div&gt;&lt;span&gt;Mr.&lt;/span&gt; &lt;strong&gt;Andersson&lt;/strong&gt;&lt;/div&gt;</example>
-    public string Data { get; private set; }
+    public string Data { get; internal set; }
+
+    /// <summary>
+    /// Error information when Success is false.
+    /// </summary>
+    public Error Error { get; internal set; }
 
     internal Result(bool success, string data)
     {
         Success = success;
         Data = data;
     }
+
+    internal Result() { }
 }
