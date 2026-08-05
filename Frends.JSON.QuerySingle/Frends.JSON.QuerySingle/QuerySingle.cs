@@ -44,7 +44,7 @@ public static class JSON
             if (result == null && options.ErrorWhenNotMatched)
                 throw new JsonException($"No matches found for query '{input.Query}'.");
 
-            return new Result(true, result);
+            return new Result { Success = true, Data = result };
         }
         catch (Exception ex)
         {
