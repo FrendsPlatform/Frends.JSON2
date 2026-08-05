@@ -1,6 +1,7 @@
 using Frends.JSON.Validate.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using System.Threading;
 
 namespace Frends.JSON.Validate.UnitTests;
 
@@ -32,7 +33,7 @@ public class UnitTests
     [TestMethod]
     public void JsonShouldValidate()
     {
-        var result = JSON.Validate(_input, _options);
+        var result = JSON.Validate(_input, _options, CancellationToken.None);
         Assert.IsTrue(result.IsValid);
         Assert.IsTrue(result.Success);
         Assert.AreEqual(0, result.Errors.Count);
@@ -41,7 +42,7 @@ public class UnitTests
     [TestMethod]
     public void ShouldHaveLicenseSetForExecutingMoreThan1000Validations()
     {
-        var results = Enumerable.Range(0, 2000).Select(i => JSON.Validate(_input, _options)).ToList();
+        var results = Enumerable.Range(0, 2000).Select(i => JSON.Validate(_input, _options, CancellationToken.None)).ToList();
 
         foreach (var result in results)
         {
@@ -68,7 +69,7 @@ public class UnitTests
         var options = _options;
         options.ThrowOnInvalidJson = false;
 
-        var result = JSON.Validate(input, options);
+        var result = JSON.Validate(input, options, CancellationToken.None);
         Assert.IsFalse(result.IsValid);
         Assert.IsFalse(result.Success);
         Assert.AreEqual(1, result.Errors.Count);
@@ -98,7 +99,7 @@ public class UnitTests
         var options = _options;
         options.ThrowOnInvalidJson = false;
 
-        var result = JSON.Validate(input, options);
+        var result = JSON.Validate(input, options, CancellationToken.None);
         Assert.IsFalse(result.IsValid);
         Assert.IsTrue(result.Success);
         Assert.AreEqual(1, result.Errors.Count);
@@ -127,7 +128,7 @@ public class UnitTests
 
         var options = _options;
 
-        var ex = Assert.ThrowsException<JsonException>(() => JSON.Validate(input, _options));
+        var ex = Assert.ThrowsException<Exception>(() => JSON.Validate(input, _options, CancellationToken.None));
         Assert.IsNotNull(ex);
     }
 }

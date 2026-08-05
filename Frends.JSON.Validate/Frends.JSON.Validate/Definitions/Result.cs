@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Frends.JSON.Validate.Definitions;
 
@@ -11,7 +12,7 @@ public class Result
     /// Operation complete without errors.
     /// </summary>
     /// <example>true</example>
-    public bool Success { get; private set; }
+    public bool Success { get; set; }
 
     /// <summary>
     /// JSON was valid.
@@ -25,10 +26,33 @@ public class Result
     /// <example>{ An error occured..., Another error }</example>
     public IList<string> Errors { get; set; }
 
+    /// <summary>
+    /// Error information when Success is false.
+    /// </summary>
+    public Error Error { get; set; }
+
     internal Result(bool success, bool isValid, IList<string> errors)
     {
         Success = success;
         IsValid = isValid;
         Errors = errors;
     }
+
+    internal Result() { }
+}
+
+/// <summary>
+/// Error details.
+/// </summary>
+public class Error
+{
+    /// <summary>
+    /// Error message.
+    /// </summary>
+    public string Message { get; set; }
+
+    /// <summary>
+    /// Additional error information.
+    /// </summary>
+    public Exception AdditionalInfo { get; set; }
 }
