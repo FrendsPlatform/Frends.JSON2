@@ -21,9 +21,8 @@ internal static class ErrorHandler
             ? exception.Message
             : $"{options.ErrorMessageOnFailure}: {exception.Message}";
 
-        return new Result
+        return new Result(false, null)
         {
-            Success = false,
             Error = new Error
             {
                 Message = errorMessage,

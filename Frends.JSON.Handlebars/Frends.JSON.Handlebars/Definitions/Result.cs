@@ -27,6 +27,4 @@ public class Result
         Success = success;
         Data = data;
     }
-
-    internal Result() { }
 }
