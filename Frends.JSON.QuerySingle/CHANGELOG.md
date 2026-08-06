@@ -3,7 +3,6 @@
 ## [1.4.0] - 2026-08-05
 ### Updated
 - Upgraded target framework from .NET 6 to .NET 8.
-- Made the task class static to comply with Frends task standards.
 - Added `CancellationToken` support to the `QuerySingle` method.
 - Added `ThrowErrorOnFailure` and `ErrorMessageOnFailure` options so that failures can be returned as a result instead of throwing an exception.
 - The result now includes an `Error` property with error details when the task fails and `ThrowErrorOnFailure` is set to false.
