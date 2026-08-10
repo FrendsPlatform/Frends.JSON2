@@ -2,6 +2,7 @@ using Frends.JSON.Query.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace Frends.JSON.Query.UnitTests;
 
@@ -53,7 +54,7 @@ public class UnitTests
             ErrorWhenNotMatched = true,
         };
 
-        var result = JSON.Query(input, options);
+        var result = JSON.Query(input, options, CancellationToken.None);
         Assert.IsTrue(result.Success);
         Assert.AreEqual(2, result.Data.Count());
         Assert.AreEqual("Anvil", result.Data.First().ToString());
@@ -74,7 +75,7 @@ public class UnitTests
             ErrorWhenNotMatched = true,
         };
 
-        var result = JSON.Query(input, options);
+        var result = JSON.Query(input, options, CancellationToken.None);
         Assert.IsTrue(result.Success);
         Assert.AreEqual(2, result.Data.Count());
         Assert.AreEqual("Anvil", result.Data.First().ToString());
@@ -94,7 +95,7 @@ public class UnitTests
             ErrorWhenNotMatched = true,
         };
 
-        Assert.ThrowsException<JsonException>(() => JSON.Query(input, options));
+        Assert.ThrowsException<Exception>(() => JSON.Query(input, options, CancellationToken.None));
     }
 
     [TestMethod]
@@ -111,7 +112,7 @@ public class UnitTests
             ErrorWhenNotMatched = false,
         };
 
-        var result = JSON.Query(input, options);
+        var result = JSON.Query(input, options, CancellationToken.None);
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.Data);
         Assert.IsFalse(result.Data.Any());
