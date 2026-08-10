@@ -6,6 +6,8 @@ namespace Frends.JSON.Handlebars.UnitTests;
 [TestClass]
 public class UnitTests
 {
+    private static Options DefaultOptions() => new Options { ThrowErrorOnFailure = true };
+
     [TestMethod]
     public void HandlebarShouldGenerateTemplate()
     {
@@ -16,7 +18,7 @@ public class UnitTests
             HandlebarPartials = new HandlebarPartial[0]
         };
 
-        var result = JSON.Handlebars(input, default);
+        var result = JSON.Handlebars(input, DefaultOptions(), default);
         Assert.IsTrue(result.Success);
         Assert.IsTrue(result.Data.Contains("<span>Mr.</span> <strong>Andersson</strong>"));
     }
@@ -31,7 +33,7 @@ public class UnitTests
             HandlebarPartials = new[] { new HandlebarPartial { Template = "<strong>{{name}}</strong>", TemplateName = "strongName" } }
         };
 
-        var result = JSON.Handlebars(input, default);
+        var result = JSON.Handlebars(input, DefaultOptions(), default);
         Assert.IsTrue(result.Success);
         Assert.IsTrue(result.Data.Contains("<span>Mr.</span> <strong>Andersson</strong>"));
     }
