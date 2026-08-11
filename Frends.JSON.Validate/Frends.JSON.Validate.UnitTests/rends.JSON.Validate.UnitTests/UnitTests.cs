@@ -27,7 +27,7 @@ public class UnitTests
     public void StartUp()
     {
         _input = new Input() { Json = ValidUserJson, JsonSchema = ValidUserSchema };
-        _options = new Options() { ThrowOnInvalidJson = true };
+        _options = new Options() { FailOnInvalidJson = true };
     }
 
     [TestMethod]
@@ -67,7 +67,7 @@ public class UnitTests
         input.JsonSchema = schema;
 
         var options = _options;
-        options.ThrowOnInvalidJson = false;
+        options.FailOnInvalidJson = false;
 
         var result = JSON.Validate(input, options, CancellationToken.None);
         Assert.IsFalse(result.IsValid);
@@ -97,7 +97,7 @@ public class UnitTests
         input.JsonSchema = schema;
 
         var options = _options;
-        options.ThrowOnInvalidJson = false;
+        options.FailOnInvalidJson = false;
 
         var result = JSON.Validate(input, options, CancellationToken.None);
         Assert.IsFalse(result.IsValid);

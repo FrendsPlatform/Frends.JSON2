@@ -41,7 +41,7 @@ public static class JSON
             }
             catch (Exception exception)
             {
-                if (options.ThrowOnInvalidJson)
+                if (options.FailOnInvalidJson)
                     throw;  // re-throw
 
                 errors = new List<string>();
@@ -56,7 +56,7 @@ public static class JSON
 
             var isValid = jToken.IsValid(schema, out errors);
 
-            if (!isValid && options.ThrowOnInvalidJson)
+            if (!isValid && options.FailOnInvalidJson)
                 throw new JsonException($"Json is not valid. {string.Join("; ", errors)}");
 
             return new Result(true, isValid, errors);

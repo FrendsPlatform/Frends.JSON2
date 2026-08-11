@@ -18,7 +18,7 @@ public class ErrorHandlerTests
 
     private static Options DefaultOptions() => new()
     {
-        ThrowOnInvalidJson = true,
+        FailOnInvalidJson = true,
         ThrowErrorOnFailure = true,
     };
 

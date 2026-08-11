@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0] - 2026-08-11
+### Changed
+- Renamed the `ThrowOnInvalidJson` option to `FailOnInvalidJson` to better reflect its purpose: it controls whether invalid JSON is treated as an error at all, independent of whether that error is thrown or returned (which is controlled by `ThrowErrorOnFailure`). **This is a breaking change** — update any existing task configurations to use `FailOnInvalidJson`.
+
 ## [1.1.0] - 2026-08-05
 ### Changed
 - The task now targets .NET 8.

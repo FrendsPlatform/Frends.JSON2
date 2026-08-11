@@ -9,10 +9,12 @@ namespace Frends.JSON.Validate.Definitions;
 public class Options
 {
     /// <summary>
-    /// A flag to indicate whether an error should be thrown if JSON was invalid.
+    /// A flag to indicate whether invalid JSON should be treated as an error.
+    /// When true, validation failure or parse error is treated as an error (subject to ThrowErrorOnFailure).
+    /// When false, parse/validation errors are returned as a non-successful result with Success=false without going through error handling.
     /// </summary>
     /// <example>true</example>
-    public bool ThrowOnInvalidJson { get; set; }
+    public bool FailOnInvalidJson { get; set; }
 
     /// <summary>
     /// If set to true, the task will throw an exception on failure.
