@@ -1,5 +1,6 @@
-using Frends.JSON.Validate.Definitions;
+﻿using Frends.JSON.Validate.Definitions;
 using Frends.JSON.Validate.Helpers;
+using Frends.Newtonsoft.SchemaActivation;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
