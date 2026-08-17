@@ -24,7 +24,7 @@ public class Options
     /// <summary>
     /// Custom error message to include when the task fails. Leave empty to use the default error message.
     /// </summary>
-    /// <example></example>
+    /// <example>Custom error message</example>
     [DisplayFormat(DataFormatString = "Text")]
     [DefaultValue("")]
     public string ErrorMessageOnFailure { get; set; } = string.Empty;
