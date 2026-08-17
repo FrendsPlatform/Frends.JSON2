@@ -1,11 +1,11 @@
 using Frends.JSON.QuerySingle.Definitions;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Threading;
 
 namespace Frends.JSON.QuerySingle.UnitTests;
 
-[TestFixture]
+[TestClass]
 public class ErrorHandlerTests
 {
     private const string CustomErrorMessage = "CustomErrorMessage";
@@ -23,32 +23,32 @@ public class ErrorHandlerTests
         ErrorMessageOnFailure = string.Empty
     };
 
-    [Test]
+    [TestMethod]
     public void Should_Throw_Error_When_ThrowErrorOnFailure_Is_True()
     {
-        var ex = Assert.Throws<Exception>((TestDelegate)(() =>
+        var ex = Assert.ThrowsException<Exception>((Action)(() =>
             JSON.QuerySingle(InvalidInput(), DefaultOptions(), CancellationToken.None)));
-        Assert.That(ex, Is.Not.Null);
+        Assert.IsNotNull(ex);
     }
 
-    [Test]
+    [TestMethod]
     public void Should_Return_Failed_Result_When_ThrowErrorOnFailure_Is_False()
     {
         var options = DefaultOptions();
         options.ThrowErrorOnFailure = false;
         var result = JSON.QuerySingle(InvalidInput(), options, CancellationToken.None);
-        Assert.That(result.Success, Is.False);
-        Assert.That(result.Error, Is.Not.Null);
+        Assert.IsFalse(result.Success);
+        Assert.IsNotNull(result.Error);
     }
 
-    [Test]
+    [TestMethod]
     public void Should_Use_Custom_ErrorMessageOnFailure()
     {
         var options = DefaultOptions();
         options.ErrorMessageOnFailure = CustomErrorMessage;
-        var ex = Assert.Throws<Exception>((TestDelegate)(() =>
+        var ex = Assert.ThrowsException<Exception>((Action)(() =>
             JSON.QuerySingle(InvalidInput(), options, CancellationToken.None)));
-        Assert.That(ex, Is.Not.Null);
-        Assert.That(ex?.Message, Does.Contain(CustomErrorMessage));
+        Assert.IsNotNull(ex);
+        Assert.IsTrue(ex.Message.Contains(CustomErrorMessage));
     }
 }
