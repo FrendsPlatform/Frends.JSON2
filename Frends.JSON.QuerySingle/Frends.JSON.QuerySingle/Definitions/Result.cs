@@ -20,5 +20,6 @@ public class Result
     /// <summary>
     /// Error information when the task fails and ThrowErrorOnFailure is false.
     /// </summary>
+    /// <example>object { string Message = "Query failed unexpectedly.", Exception AdditionalInfo }</example>
     public Error Error { get; set; }
 }
