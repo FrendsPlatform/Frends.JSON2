@@ -10,7 +10,7 @@ public class Error
     /// <summary>
     /// Error message.
     /// </summary>
-    /// <exampleQuery failed unexpectedly.</example>
+    /// <example>Query failed unexpectedly.</example>
     public string Message { get; set; }
 
     /// <summary>
