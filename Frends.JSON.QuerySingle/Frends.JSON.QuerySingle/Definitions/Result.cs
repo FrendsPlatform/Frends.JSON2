@@ -9,17 +9,17 @@ public class Result
     /// Operation complete without errors.
     /// </summary>
     /// <example>true</example>
-    public bool Success { get; private set; }
+    public bool Success { get; set; }
 
     /// <summary>
     /// Result data.
     /// </summary>
     /// <example>{{ "Name": "Foo", "Products": [{ "Name": "Bar", "Price": 1 }]}}</example>
-    public dynamic Data { get; private set; }
+    public dynamic Data { get; set; }
 
-    internal Result(bool success, object data)
-    {
-        Success = success;
-        Data = data;
-    }
+    /// <summary>
+    /// Error information when the task fails and ThrowErrorOnFailure is false.
+    /// </summary>
+    /// <example>object { string Message = "Query failed unexpectedly.", Exception AdditionalInfo }</example>
+    public Error Error { get; set; }
 }
