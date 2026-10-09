@@ -10,6 +10,8 @@ Frends Task to process JSON.
 - [Frends.JSON.QuerySingle](Frends.JSON.QuerySingle/README.md)
 - [Frends.JSON.Query](Frends.JSON.Query/README.md)
 - [Frends.JSON.Validate](Frends.JSON.Validate/README.md)
+- [Frends.JSON.EnforceTypes](Frends.JSON.EnforceTypes/README.md)
+- [Frends.JSON.Transform](Frends.JSON.Transform/README.md)
 
 # Contributing
 When contributing to this repository, please first discuss the change you wish to make via issue, email, or any other method with the owners of this repository before making a change.

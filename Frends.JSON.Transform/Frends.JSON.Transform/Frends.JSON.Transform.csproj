@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net8.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <IncludeSource>true</IncludeSource>
+	  <AssemblyName>Frends.JSON.Transform</AssemblyName>
+	  <RootNamespace>Frends.JSON.Transform</RootNamespace>
+
+	  <Version>1.2.0</Version>
+	  <Authors>Frends</Authors>
+	  <Copyright>Frends</Copyright>
+	  <Company>Frends</Company>
+	  <Product>Frends</Product>
+	  <PackageTags>Frends</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <Description>
+		  The Transform task is meant for simple JSON to JSON transformation using [JUST.net](https://github.com/WorkMaze/JUST.net#just) library.
+		  It can also be used for JSON to XML or CSV transformation, but it is not recommeded.
+	  </Description>
+	  <PackageProjectUrl>https://frends.com/</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/FrendsPlatform/Frends.JSON2/tree/main/Frends.JSON.Transform</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="FrendsTaskMetadata.json" Pack="true" PackagePath="/">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="JUST.NET" Version="4.2.0" />
+	<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+	<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+	<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
+
+</Project>
+
