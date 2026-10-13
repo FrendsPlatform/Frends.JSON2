@@ -1,0 +1,19 @@
+name: Frends.JSON.Transform Main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Frends.JSON.Transform/**'
+  workflow_dispatch:
+  
+
+jobs:
+  build:
+    uses: FrendsPlatform/FrendsTasks/.github/workflows/build_main.yml@main
+    with:
+      workdir: Frends.JSON.Transform
+    secrets:
+      badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
+      

@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net8.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <IncludeSource>true</IncludeSource>
+	  <AssemblyName>Frends.JSON.EnforceTypes</AssemblyName>
+	  <RootNamespace>Frends.JSON.EnforceTypes</RootNamespace>
+
+	  <Version>2.1.0</Version>
+	  <Authors>Frends</Authors>
+	  <Copyright>Frends</Copyright>
+	  <Company>Frends</Company>
+	  <Product>Frends</Product>
+	  <PackageTags>Frends</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <Description>Frends task for enforcing types in JSON documents.</Description>
+	  <PackageProjectUrl>https://frends.com/</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/FrendsPlatform/Frends.JSON2/tree/main/Frends.JSON.EnforceTypes</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="FrendsTaskMetadata.json" Pack="true" PackagePath="/">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+	<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+	  <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
+
+</Project>
+
