@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.0] - 2026-10-15
+### Changed
+- Added missing examples to the documentation of the result's error properties.
+
 ## [2.0.0] - 2026-08-11
 ### Changed
 - The task now targets .NET 8.
