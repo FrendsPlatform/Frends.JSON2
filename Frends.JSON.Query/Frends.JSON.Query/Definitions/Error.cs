@@ -10,10 +10,12 @@ public class Error
     /// <summary>
     /// Error message.
     /// </summary>
+    /// <example>Query failed: invalid JSONPath expression</example>
     public string Message { get; internal set; }
 
     /// <summary>
     /// The exception that caused the error.
     /// </summary>
+    /// <example>System.Exception: Query failed</example>
     public Exception AdditionalInfo { get; internal set; }
 }
