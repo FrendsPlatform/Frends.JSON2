@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.0] - 2026-10-15
+### Changed
+- Improved the Task documentation by adding example values for the `Error` and `Result` properties.
+
 ## [1.2.0] - 2026-08-04
 ### Changed
 - The task now targets .NET 8.
