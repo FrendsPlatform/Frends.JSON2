@@ -29,6 +29,7 @@ public class Result
     /// <summary>
     /// Error information when Success is false.
     /// </summary>
+    /// <example>null</example>
     public Error Error { get; set; }
 
     internal Result(bool success, bool isValid, IList<string> errors)
@@ -49,10 +50,12 @@ public class Error
     /// <summary>
     /// Error message.
     /// </summary>
+    /// <example>Invalid JSON: unexpected character encountered</example>
     public string Message { get; set; }
 
     /// <summary>
     /// Additional error information.
     /// </summary>
+    /// <example>System.Exception: Invalid JSON</example>
     public Exception AdditionalInfo { get; set; }
 }
