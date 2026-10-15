@@ -20,5 +20,6 @@ public class Result
     /// <summary>
     /// Error information if the operation failed.
     /// </summary>
+    /// <example>Error { Message = "An error occurred.", AdditionalInfo = Exception }</example>
     public Error Error { get; init; }
 }
