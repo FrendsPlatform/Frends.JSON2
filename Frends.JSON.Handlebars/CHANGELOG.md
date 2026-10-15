@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.0] - 2026-10-15
+### Changed
+- Improved the documentation of the `Error` and `Result` properties by adding examples.
+
 ## [1.3.0] - 2026-08-05
 ### Changed
 - The task now targets .NET 8.

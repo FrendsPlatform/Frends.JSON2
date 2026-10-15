@@ -20,6 +20,7 @@ public class Result
     /// <summary>
     /// Error information when Success is false.
     /// </summary>
+    /// <example>null</example>
     public Error Error { get; internal set; }
 
     internal Result(bool success, string data)
