@@ -22,5 +22,6 @@ public class Result
     /// <summary>
     /// Error information, populated when the task fails and ThrowErrorOnFailure is false.
     /// </summary>
+    /// <example>null</example>
     public Error Error { get; internal set; }
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.0] - 2026-10-15
+### Changed
+- Improved the documentation of the error and result fields by adding example values.
+
 ## [1.3.0] - 2026-07-31
 ### Changed
 - Added a `CancellationToken` parameter so that Frends can cancel the task when needed.
