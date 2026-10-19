@@ -16,5 +16,6 @@ public class Error
     /// <summary>
     /// The exception that caused the error, if available.
     /// </summary>
+    /// <example>System.InvalidOperationException: Template compilation failed.</example>
     public Exception AdditionalInfo { get; internal set; }
 }
