@@ -1,10 +1,10 @@
 # Changelog
 
-## [3.0.0] - 2026-10-27
+## [2.2.0] - 2026-10-27
 ### Changed
-- **[Breaking Change]** The Task now requires a `CancellationToken` parameter, which is provided automatically by Frends Platform.
-- **[Breaking Change]** The Task now targets .NET 8.
-- **[Breaking Change]** The Task result now includes an `Error` property with `Message` and `AdditionalInfo`.
+- The Task now requires a `CancellationToken` parameter, which is provided automatically by Frends Platform.
+- The Task now targets .NET 8.
+- The Task result now includes an `Error` property with `Message` and `AdditionalInfo`.
 ### Added
 - Added `ThrowErrorOnFailure` and `ErrorMessageOnFailure` options. When `ThrowErrorOnFailure` is `false`, failures are returned as a failed result instead of throwing.
 
