@@ -68,11 +68,8 @@ public static class JSON
         [PropertyTab] Options options,
         CancellationToken cancellationToken)
     {
-        options ??= new Options();
-
         try
         {
-            ValidationHandler.Run(input);
             cancellationToken.ThrowIfCancellationRequested();
             return Convert(input, options);
         }
