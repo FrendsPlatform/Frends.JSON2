@@ -1,4 +1,5 @@
 using Frends.JSON.ConvertXMLStringToJToken.Definitions;
+using Frends.JSON.ConvertXMLStringToJToken.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -8,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -17,7 +19,7 @@ namespace Frends.JSON.ConvertXMLStringToJToken;
 /// <summary>
 /// JSON Task.
 /// </summary>
-public class JSON
+public static class JSON
 {
     private const string JsonNamespace = "http://james.newtonking.com/projects/json";
     private const string XsiNamespace = "http://www.w3.org/2001/XMLSchema-instance";
@@ -59,10 +61,29 @@ public class JSON
     /// </summary>
     /// <param name="input">Input parameters</param>
     /// <param name="options">Optional parameters</param>
-    /// <returns>Object { bool Success, object Jtoken }</returns>
-    public static Result ConvertXMLStringToJToken([PropertyTab] Input input, [PropertyTab] Options options)
+    /// <param name="cancellationToken">A cancellation token provided by Frends Platform.</param>
+    /// <returns>object { bool Success, object Jtoken, object Error { string Message, Exception AdditionalInfo } }</returns>
+    public static Result ConvertXMLStringToJToken(
+        [PropertyTab] Input input,
+        [PropertyTab] Options options,
+        CancellationToken cancellationToken)
     {
         options ??= new Options();
+
+        try
+        {
+            ValidationHandler.Run(input);
+            cancellationToken.ThrowIfCancellationRequested();
+            return Convert(input, options);
+        }
+        catch (Exception ex)
+        {
+            return ex.Handle(options);
+        }
+    }
+
+    private static Result Convert(Input input, Options options)
+    {
 
         // Schema mode without an XSD is treated as a no-op rather than an error so that
         // processes migrated into Schema mode without a schema keep their previous output.
@@ -95,7 +116,7 @@ public class JSON
             RemoveUnusedXsiNamespaceDeclarations(token);
         }
 
-        return new Result(true, token);
+        return new Result { Success = true, Jtoken = token, Error = null };
     }
 
     private static XmlDocument LoadXmlDocument(string xml)

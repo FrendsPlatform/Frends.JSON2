@@ -77,4 +77,19 @@ public class Options
     [DefaultValue(BadValueAction.Ignore)]
     [UIHint(nameof(TypeCorrection), "", TypeCorrectionMode.Attributes, TypeCorrectionMode.Schema)]
     public BadValueAction ActionOnBadValues { get; set; } = BadValueAction.Ignore;
+
+    /// <summary>
+    /// Whether to throw an error on failure.
+    /// </summary>
+    /// <example>true</example>
+    [DefaultValue(true)]
+    public bool ThrowErrorOnFailure { get; set; } = true;
+
+    /// <summary>
+    /// Overrides the error message on failure.
+    /// </summary>
+    /// <example>Failed to convert the XML</example>
+    [DisplayFormat(DataFormatString = "Text")]
+    [DefaultValue("")]
+    public string ErrorMessageOnFailure { get; set; } = string.Empty;
 }

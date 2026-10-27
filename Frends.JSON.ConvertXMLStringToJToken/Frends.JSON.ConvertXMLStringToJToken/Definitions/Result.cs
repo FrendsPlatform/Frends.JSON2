@@ -9,17 +9,17 @@ public class Result
     /// Operation complete without errors.
     /// </summary>
     /// <example>true</example>
-    public bool Success { get; private set; }
+    public bool Success { get; set; }
 
     /// <summary>
     /// JToken.
     /// </summary>
     /// <example>{{ "?xml": { "@version": "1.0", "@standalone": "no" }, "root": { "foos": { "@id": "1", "foo": "bar" } }}}</example>
-    public dynamic Jtoken { get; private set; }
+    public dynamic Jtoken { get; set; }
 
-    internal Result(bool success, object jtoken)
-    {
-        Success = success;
-        Jtoken = jtoken;
-    }
+    /// <summary>
+    /// Error that occurred during task execution.
+    /// </summary>
+    /// <example>object { string Message, Exception AdditionalInfo }</example>
+    public Error Error { get; set; }
 }
