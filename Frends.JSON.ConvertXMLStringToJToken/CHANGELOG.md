@@ -2,7 +2,6 @@
 
 ## [2.2.0] - 2026-10-27
 ### Changed
-- The Task now requires a `CancellationToken` parameter, which is provided automatically by Frends Platform.
 - The Task now targets .NET 8.
 - The Task result now includes an `Error` property with `Message` and `AdditionalInfo`.
 ### Added
