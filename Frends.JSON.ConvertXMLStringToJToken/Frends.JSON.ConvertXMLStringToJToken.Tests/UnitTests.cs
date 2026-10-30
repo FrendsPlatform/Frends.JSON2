@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Frends.JSON.ConvertXMLStringToJToken.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
@@ -23,10 +24,10 @@ public class UnitTests
                 <name>Louis</name>
                  <url>http://www.yahoo.com</url>
               </person>
-            </root>"
+            </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options());
+        var result = JSON.ConvertXMLStringToJToken(input, new Options(), CancellationToken.None);
         Assert.IsTrue(result.Success);
         Assert.IsInstanceOfType(result.Jtoken, typeof(JObject));
     }
@@ -41,7 +42,7 @@ public class UnitTests
                <person id='1'>
                  <name>Alan</name>
                </person>
-             </root>"
+             </root>",
         };
 
         var options = new Options()
@@ -62,10 +63,10 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var root = ((JObject)result.Jtoken)["root"];
 
         Assert.IsTrue(result.Success);
@@ -87,10 +88,10 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price xsi:type='float'>12.5</price>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.None });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.None }, CancellationToken.None);
         Assert.IsTrue(result.Success);
 
         var price = ((JObject)result.Jtoken)["root"]?["price"] as JObject;
@@ -112,10 +113,10 @@ public class UnitTests
                       <huge xsi:type='integer'>123456789012345678901234567890</huge>
                       <inStock xsi:type='boolean'>true</inStock>
                       <name>Widget</name>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var root = (JObject)((JObject)result.Jtoken)["root"];
 
         Assert.IsTrue(result.Success);
@@ -136,10 +137,10 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price currency='EUR' xsi:type='float'>12.5</price>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         // Element carries another attribute, so the wrapper is preserved but #text becomes a number.
@@ -159,10 +160,10 @@ public class UnitTests
                       <lower xsi:type='boolean'>true</lower>
                       <upper xsi:type='boolean'>TRUE</upper>
                       <camel xsi:type='boolean'>True</camel>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var root = (JObject)((JObject)result.Jtoken)["root"];
 
         Assert.IsTrue(result.Success);
@@ -184,12 +185,12 @@ public class UnitTests
             XML = @"<root xmlns:i='http://www.w3.org/2001/XMLSchema-instance'>
                       <price i:type='float'>12.5</price>
                       <inStock i:type='boolean'>true</inStock>
-                    </root>"
+                    </root>",
         };
 
         // Author used 'i' instead of the conventional 'xsi' prefix; conversion must still fire
         // because the prefix is resolved against the XML Schema Instance namespace URI.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var root = (JObject)((JObject)result.Jtoken)["root"];
 
         Assert.IsTrue(result.Success);
@@ -206,12 +207,12 @@ public class UnitTests
         {
             XML = @"<root xmlns:cust='http://example.com/custom'>
                       <price cust:type='float'>12.5</price>
-                    </root>"
+                    </root>",
         };
 
         // 'cust' is bound to an unrelated namespace, so cust:type is just an arbitrary attribute
         // and must not trigger conversion.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         Assert.IsInstanceOfType(price, typeof(JObject));
@@ -229,12 +230,12 @@ public class UnitTests
                       <wrapper xmlns:i='http://www.w3.org/2001/XMLSchema-instance'>
                         <price i:type='float'>12.5</price>
                       </wrapper>
-                    </root>"
+                    </root>",
         };
 
         // The xsi-equivalent prefix is bound on <wrapper>, not on the root — the scope must
         // still be visible to the inner <price> element when we resolve i:type.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["wrapper"]?["price"];
 
         Assert.AreEqual(JTokenType.Float, price.Type);
@@ -249,13 +250,13 @@ public class UnitTests
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <fax xsi:nil='true'/>
                       <phone xsi:nil='false'/>
-                    </root>"
+                    </root>",
         };
 
         // In None mode the task does no type/nullability processing, so Newtonsoft's raw
         // shape (wrapper objects holding @xsi:nil) is preserved verbatim. Anyone relying on
         // the pre-2.0.0 output stays unaffected by the xsi:nil feature.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.None });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.None }, CancellationToken.None);
         var root = (JObject)((JObject)result.Jtoken)["root"];
 
         Assert.AreEqual("true", root["fax"]?["@xsi:nil"]?.ToString());
@@ -269,10 +270,10 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <fax xsi:nil='true'/>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var fax = ((JObject)result.Jtoken)["root"]?["fax"];
 
         Assert.IsNotNull(fax);
@@ -287,12 +288,12 @@ public class UnitTests
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <fax xsi:nil='true'>123</fax>
                       <count xsi:type='int' xsi:nil='true'>42</count>
-                    </root>"
+                    </root>",
         };
 
         // Content wins over the nil flag: the string "123" survives, and the typed element
         // still converts to integer 42 via the normal xsi:type path.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var root = (JObject)((JObject)result.Jtoken)["root"];
 
         Assert.AreEqual(JTokenType.String, root["fax"].Type);
@@ -311,10 +312,10 @@ public class UnitTests
                       <ratio xsi:type='float' xsi:nil='false'/>
                       <inStock xsi:type='boolean' xsi:nil='false'/>
                       <str xsi:type='string' xsi:nil='false'/>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var root = (JObject)((JObject)result.Jtoken)["root"];
 
         Assert.AreEqual(JTokenType.Integer, root["count"].Type);
@@ -334,10 +335,10 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <count xsi:type='int' xsi:nil='false'>5</count>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var count = ((JObject)result.Jtoken)["root"]?["count"];
 
         Assert.AreEqual(JTokenType.Integer, count.Type);
@@ -351,12 +352,12 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <fax xsi:nil='false'/>
-                    </root>"
+                    </root>",
         };
 
         // No xsi:type → we have no type info to coerce against. Per spec, leave the wrapper
         // alone (xsi:nil attribute stays so the caller can see the marker if they want).
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var fax = ((JObject)result.Jtoken)["root"]?["fax"];
 
         Assert.IsInstanceOfType(fax, typeof(JObject));
@@ -370,12 +371,12 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price currency='EUR' xsi:type='float' xsi:nil='false'/>
-                    </root>"
+                    </root>",
         };
 
         // Element carries another data attribute, so the wrapper must survive. xsi:nil and
         // xsi:type are consumed; #text becomes the typed default; @currency stays untouched.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         Assert.IsInstanceOfType(price, typeof(JObject));
@@ -393,10 +394,10 @@ public class UnitTests
         {
             XML = @"<root xmlns:i='http://www.w3.org/2001/XMLSchema-instance'>
                       <count i:type='int' i:nil='false'/>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var count = ((JObject)result.Jtoken)["root"]?["count"];
 
         Assert.AreEqual(JTokenType.Integer, count.Type);
@@ -410,7 +411,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <name xsi:nil='false'/>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -424,12 +425,12 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
         // Schema declares the element as xs:string. xsi:nil='false' on an empty element means
         // "do not allow null" — for a string that's an empty string.
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var name = ((JObject)result.Jtoken)["root"]?["name"];
 
         Assert.IsNotNull(name);
@@ -444,7 +445,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <fax xsi:nil='true'/>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -458,10 +459,10 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var fax = ((JObject)result.Jtoken)["root"]?["fax"];
 
         Assert.IsNotNull(fax);
@@ -475,10 +476,10 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price xsi:type='float'>not-a-number</price>
-                    </root>"
+                    </root>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         Assert.IsInstanceOfType(price, typeof(JObject));
@@ -496,7 +497,7 @@ public class UnitTests
                       <quantity>3</quantity>
                       <inStock>true</inStock>
                       <name>Widget</name>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -513,10 +514,10 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         Assert.IsTrue(result.Success);
 
         var root = ((JObject)result.Jtoken)["root"] as JObject;
@@ -541,7 +542,7 @@ public class UnitTests
         {
             XML = @"<root>
                       <score>9.5</score>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -555,10 +556,10 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var scores = ((JObject)result.Jtoken)["root"]?["score"] as JArray;
 
         Assert.IsNotNull(scores);
@@ -574,7 +575,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price xsi:type='float'>not-a-number</price>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options
@@ -584,7 +585,7 @@ public class UnitTests
         };
 
         var ex = Assert.ThrowsException<FormatException>(
-            () => JSON.ConvertXMLStringToJToken(input, options));
+            () => JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None));
 
         StringAssert.Contains(ex.Message, "not-a-number");
         StringAssert.Contains(ex.Message, "float");
@@ -598,7 +599,7 @@ public class UnitTests
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price xsi:type='float'>12.5</price>
                       <inStock xsi:type='boolean'>true</inStock>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options
@@ -607,7 +608,7 @@ public class UnitTests
             ActionOnBadValues = BadValueAction.Throw,
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var root = (JObject)((JObject)result.Jtoken)["root"];
 
         Assert.IsTrue(result.Success);
@@ -622,7 +623,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <inStock xsi:type='boolean'>maybe</inStock>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options
@@ -632,7 +633,7 @@ public class UnitTests
         };
 
         var ex = Assert.ThrowsException<FormatException>(
-            () => JSON.ConvertXMLStringToJToken(input, options));
+            () => JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None));
 
         StringAssert.Contains(ex.Message, "maybe");
         StringAssert.Contains(ex.Message, "boolean");
@@ -645,7 +646,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price xsi:type='float'>not-a-number</price>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options
@@ -655,7 +656,7 @@ public class UnitTests
 
         Assert.AreEqual(BadValueAction.Ignore, options.ActionOnBadValues);
 
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         Assert.IsInstanceOfType(price, typeof(JObject));
@@ -670,7 +671,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <data xsi:type='hexBinary'>DEADBEEF</data>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options
@@ -681,7 +682,7 @@ public class UnitTests
 
         // xsi:types we don't know how to convert (e.g. hexBinary) are not treated as "bad" —
         // they're simply left alone regardless of the action setting.
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
 
         Assert.IsTrue(result.Success);
     }
@@ -693,12 +694,12 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <data xsi:type='hexBinary'>DEADBEEF</data>
-                    </root>"
+                    </root>",
         };
 
         // hexBinary is not convertible, so @xsi:type survives — the xmlns:xsi declaration that
         // it depends on must be preserved rather than pruned as unused.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Attributes }, CancellationToken.None);
         var root = ((JObject)result.Jtoken)["root"] as JObject;
 
         Assert.IsNotNull(root);
@@ -713,7 +714,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:i='http://www.w3.org/2001/XMLSchema-instance'>
                       <price>12.5</price>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -727,13 +728,13 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
         // Root already binds the XSD-instance namespace under prefix 'i'. The schema-injected
         // type attribute should serialize as @i:type and the prefix-agnostic lookup must still
         // resolve it for conversion.
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         Assert.IsTrue(result.Success);
@@ -748,7 +749,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price xsi:type='int'>12.5</price>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -762,11 +763,11 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
         // The author lied with xsi:type='int' on a 12.5 value; schema says float. XSD wins.
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         Assert.IsTrue(result.Success);
@@ -781,7 +782,7 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <name xsi:type='int'>42</name>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -795,11 +796,11 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
         // Inline xsi:type='int' must not override the schema's xs:string declaration.
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var name = ((JObject)result.Jtoken)["root"]?["name"];
 
         Assert.IsTrue(result.Success);
@@ -812,12 +813,12 @@ public class UnitTests
     {
         var input = new Input()
         {
-            XML = "<root><price>12.5</price></root>"
+            XML = "<root><price>12.5</price></root>",
         };
 
         // Schema mode without an XSD is a graceful no-op (not an error), so migrated
         // processes that land in Schema mode without a schema keep their previous output.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Schema });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Schema }, CancellationToken.None);
         Assert.IsTrue(result.Success);
 
         var price = ((JObject)result.Jtoken)["root"]?["price"];
@@ -833,13 +834,13 @@ public class UnitTests
         {
             XML = @"<root xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
                       <price xsi:type='float'>12.5</price>
-                    </root>"
+                    </root>",
         };
 
         // Schema-without-XSD is a true no-op: inline xsi:type must not bleed through and
         // start converting values either. Tenants who land here via migration with no XSD
         // should see exactly the pre-2.0.0 output shape.
-        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Schema });
+        var result = JSON.ConvertXMLStringToJToken(input, new Options { TypeCorrection = TypeCorrectionMode.Schema }, CancellationToken.None);
         var price = ((JObject)result.Jtoken)["root"]?["price"];
 
         Assert.IsTrue(result.Success);
@@ -858,7 +859,7 @@ public class UnitTests
                       <foobar1 xsi:nil='true'/>
                       <foobar2 xsi:nil='true'/>
                       <foobar3 xsi:nil='true'/>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -874,10 +875,10 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var foobar1 = ((JObject)result.Jtoken)["root"]?["foobar1"];
         var foobar2 = ((JObject)result.Jtoken)["root"]?["foobar2"];
         var foobar3 = ((JObject)result.Jtoken)["root"]?["foobar3"];
@@ -898,7 +899,7 @@ public class UnitTests
                       <foobar1>3</foobar1>
                       <foobar2>2.3</foobar2>
                       <foobar3>true</foobar3>
-                    </root>"
+                    </root>",
         };
 
         var options = new Options()
@@ -914,10 +915,10 @@ public class UnitTests
                           </xs:sequence>
                         </xs:complexType>
                       </xs:element>
-                    </xs:schema>"
+                    </xs:schema>",
         };
 
-        var result = JSON.ConvertXMLStringToJToken(input, options);
+        var result = JSON.ConvertXMLStringToJToken(input, options, CancellationToken.None);
         var foobar1 = ((JObject)result.Jtoken)["root"]?["foobar1"];
         var foobar2 = ((JObject)result.Jtoken)["root"]?["foobar2"];
         var foobar3 = ((JObject)result.Jtoken)["root"]?["foobar3"];
